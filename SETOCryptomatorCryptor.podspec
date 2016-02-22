@@ -13,6 +13,8 @@ Pod::Spec.new do |s|
   s.public_header_files = "SETOCryptomatorCryptor/{SETOCryptomatorCryptor,SETOAsyncCryptomatorCryptor,SETOMasterKey}.h"
   s.source_files = 'SETOCryptomatorCryptor/*.{h,m,c}'
 
+  s.platform = :ios, '8.0'
+
   s.frameworks = 'Security'
   s.dependency 'Base32', '~> 1.0.0'
   s.dependency 'KZPropertyMapper', '~> 2.6.0'
