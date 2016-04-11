@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/cocoapods/p/SETOCryptomatorCryptor.svg?style=flat)](http://cocoadocs.org/docsets/SETOCryptomatorCryptor)
 [![Twitter](https://img.shields.io/badge/twitter-@Cryptomator-blue.svg?style=flat)](http://twitter.com/Cryptomator)
 
-SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults. For more information on the security details visit [cryptomator.org](https://cryptomator.org/#security).
+SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults. For more information on the security details visit [cryptomator.org](https://cryptomator.org/architecture/).
 
 ## Requirements
 
@@ -128,12 +128,14 @@ Create and initialize `SETOAsyncCryptomatorCryptor` using `initWithMasterKey:que
 
 `SETOMasterKey` holds the information necessary for the master key. All properties are immutable to prevent accidental changes. Use `updateFromJsonData:` or `updateFromDictionary:` to modify the properties in bulk. Use the convenience method `dictionaryRepresentation`, e.g. for persisting the master key.
 
+## Contributing to Cryptomator
+
+Please read our [contribution guide](https://github.com/cryptomator/cryptomator-objc-cryptor/blob/master/CONTRIBUTING.md), if you would like to report a bug, ask a question or help us with coding.
+
+## Code of Conduct
+
+Help us keep Cryptomator open and inclusive. Please read and follow our [Code of Conduct](https://github.com/cryptomator/cryptomator-objc-cryptor/blob/master/CODE_OF_CONDUCT.md).
+
 ## License
 
 Distributed under the MIT license. See the LICENSE file for more info.
-
-## Contact
-
-- https://cryptomator.org/
-- info@cryptomator.org
-- https://twitter.com/Cryptomator
