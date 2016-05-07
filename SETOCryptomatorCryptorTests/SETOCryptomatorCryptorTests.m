@@ -173,7 +173,7 @@
 	NSString *plaintextPathComponent = @"So oder so ähnlich könnte Ihr Ordner heißen";
 	NSString *ciphertextPathComponent = [self.cryptor encryptFilename:plaintextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
 	NSString *decrypted = [self.cryptor decryptFilename:ciphertextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
-	XCTAssertEqualObjects([plaintextPathComponent precomposedStringWithCanonicalMapping], decrypted);
+	XCTAssertEqualObjects(plaintextPathComponent, decrypted);
 }
 
 - (void)testEncryptionAndDecryptionWithNewMasterKey {

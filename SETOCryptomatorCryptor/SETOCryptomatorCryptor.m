@@ -213,8 +213,7 @@ static const size_t BLOCK_SIZE = 16;
 	}
 
 	NSParameterAssert(filename);
-	NSString *normalizedFilename = [filename precomposedStringWithCanonicalMapping];
-	NSData *plaintext = [normalizedFilename dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *plaintext = [filename dataUsingEncoding:NSUTF8StringEncoding];
 	unsigned char *ciphertext = malloc(plaintext.length + 16);
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
