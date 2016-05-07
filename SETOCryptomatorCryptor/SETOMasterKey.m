@@ -11,9 +11,10 @@
 #import <KZPropertyMapper/KZPropertyMapper.h>
 
 NSString *const kSETOMasterKeyFileMimeType = @"application/json";
-NSUInteger const kSETOMasterKeyCurrentVersion = 3;
+uint32_t const kSETOMasterKeyCurrentVersion = 3;
 
 NSString *const kSETOMasterKeyVersionKey = @"version";
+NSString *const kSETOMasterKeyVersionMacKey = @"versionMac";
 NSString *const kSETOMasterKeyScryptSaltKey = @"scryptSalt";
 NSString *const kSETOMasterKeyScryptCostParamKey = @"scryptCostParam";
 NSString *const kSETOMasterKeyScryptBlockSizeKey = @"scryptBlockSize";
@@ -21,10 +22,11 @@ NSString *const kSETOMasterKeyPrimaryMasterKeyKey = @"primaryMasterKey";
 NSString *const kSETOMasterKeyMacMasterKeyKey = @"hmacMasterKey";
 
 @interface SETOMasterKey ()
-@property (nonatomic, assign) NSUInteger version;
+@property (nonatomic, assign) uint32_t version;
+@property (nonatomic, strong) NSData *versionMac;
 @property (nonatomic, strong) NSData *scryptSalt;
-@property (nonatomic, assign) NSUInteger scryptCostParam;
-@property (nonatomic, assign) NSUInteger scryptBlockSize;
+@property (nonatomic, assign) uint64_t scryptCostParam;
+@property (nonatomic, assign) uint32_t scryptBlockSize;
 @property (nonatomic, strong) NSData *primaryMasterKey;
 @property (nonatomic, strong) NSData *macMasterKey;
 @end
@@ -44,11 +46,12 @@ NSString *const kSETOMasterKeyMacMasterKeyKey = @"hmacMasterKey";
 - (BOOL)updateFromDictionary:(NSDictionary *)dictionary {
 	return [KZPropertyMapper mapValuesFrom:dictionary toInstance:self usingMapping:@{
 		kSETOMasterKeyVersionKey: KZProperty(version),
+		kSETOMasterKeyVersionMacKey: KZCall(dataFromBase64EncodedString:, versionMac),
 		kSETOMasterKeyScryptSaltKey: KZCall(dataFromBase64EncodedString:, scryptSalt),
 		kSETOMasterKeyScryptCostParamKey: KZProperty(scryptCostParam),
 		kSETOMasterKeyScryptBlockSizeKey: KZProperty(scryptBlockSize),
 		kSETOMasterKeyPrimaryMasterKeyKey: KZCall(dataFromBase64EncodedString:, primaryMasterKey),
-		kSETOMasterKeyMacMasterKeyKey: KZCall(dataFromBase64EncodedString:, macMasterKey),
+		kSETOMasterKeyMacMasterKeyKey: KZCall(dataFromBase64EncodedString:, macMasterKey)
 	}];
 }
 
@@ -59,6 +62,7 @@ NSString *const kSETOMasterKeyMacMasterKeyKey = @"hmacMasterKey";
 - (NSDictionary *)dictionaryRepresentation {
 	return @{
 		kSETOMasterKeyVersionKey: @(self.version),
+		kSETOMasterKeyVersionMacKey: [self.versionMac base64EncodedStringWithOptions:0],
 		kSETOMasterKeyScryptSaltKey: [self.scryptSalt base64EncodedStringWithOptions:0],
 		kSETOMasterKeyScryptCostParamKey: @(self.scryptCostParam),
 		kSETOMasterKeyScryptBlockSizeKey: @(self.scryptBlockSize),

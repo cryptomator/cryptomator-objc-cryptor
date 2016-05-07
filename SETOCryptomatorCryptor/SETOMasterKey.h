@@ -9,9 +9,10 @@
 #import <Foundation/Foundation.h>
 
 extern NSString *const kSETOMasterKeyFileMimeType;
-extern NSUInteger const kSETOMasterKeyCurrentVersion;
+extern uint32_t const kSETOMasterKeyCurrentVersion;
 
 extern NSString *const kSETOMasterKeyVersionKey;
+extern NSString *const kSETOMasterKeyVersionMacKey;
 extern NSString *const kSETOMasterKeyScryptSaltKey;
 extern NSString *const kSETOMasterKeyScryptCostParamKey;
 extern NSString *const kSETOMasterKeyScryptBlockSizeKey;
@@ -20,10 +21,11 @@ extern NSString *const kSETOMasterKeyMacMasterKeyKey;
 
 @interface SETOMasterKey : NSObject
 
-@property (nonatomic, readonly) NSUInteger version;
+@property (nonatomic, readonly) uint32_t version;
+@property (nonatomic, readonly) NSData *versionMac;
 @property (nonatomic, readonly) NSData *scryptSalt;
-@property (nonatomic, readonly) NSUInteger scryptCostParam;
-@property (nonatomic, readonly) NSUInteger scryptBlockSize;
+@property (nonatomic, readonly) uint64_t scryptCostParam;
+@property (nonatomic, readonly) uint32_t scryptBlockSize;
 @property (nonatomic, readonly) NSData *primaryMasterKey;
 @property (nonatomic, readonly) NSData *macMasterKey;
 

@@ -8,6 +8,13 @@
 
 #include "SETOCryptoSupport.h"
 
+void int_to_big_endian_bytes(uint32_t num, unsigned char *bytes) {
+	bytes[0] = 0xFF & num >> 24;
+	bytes[1] = 0xFF & num >> 16;
+	bytes[2] = 0xFF & num >> 8;
+	bytes[3] = 0xFF & num;
+}
+
 uint64_t big_endian_bytes_to_long(const unsigned char *bytes) {
 	uint64_t msb = (uint32_t)bytes[0] << 24 | (uint32_t)bytes[1] << 16 | (uint32_t)bytes[2] << 8 | bytes[3];
 	uint32_t lsb = (uint32_t)bytes[4] << 24 | (uint32_t)bytes[5] << 16 | (uint32_t)bytes[6] << 8 | bytes[7];

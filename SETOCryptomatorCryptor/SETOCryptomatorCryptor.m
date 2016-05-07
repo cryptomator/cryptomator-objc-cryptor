@@ -23,10 +23,11 @@
 
 // exposing SETOMasterKey's properties for direct mutation
 @interface SETOMasterKey ()
-@property (nonatomic, assign) NSUInteger version;
+@property (nonatomic, assign) uint32_t version;
+@property (nonatomic, strong) NSData *versionMac;
 @property (nonatomic, strong) NSData *scryptSalt;
-@property (nonatomic, assign) NSUInteger scryptCostParam;
-@property (nonatomic, assign) NSUInteger scryptBlockSize;
+@property (nonatomic, assign) uint64_t scryptCostParam;
+@property (nonatomic, assign) uint32_t scryptBlockSize;
 @property (nonatomic, strong) NSData *primaryMasterKey;
 @property (nonatomic, strong) NSData *macMasterKey;
 @end
@@ -97,14 +98,25 @@ static const size_t BLOCK_SIZE = 16;
 	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
 	EVP_CIPHER_CTX_cleanup(&ctx);
 
+	// calculate mac over version:
+	unsigned char versionMac[CC_SHA256_DIGEST_LENGTH];
+	unsigned char versionBytes[sizeof(uint32_t)] = {0};
+	int_to_big_endian_bytes(kSETOMasterKeyCurrentVersion, versionBytes);
+	CCHmacContext versionHmacContext;
+	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, macMasterKeyBuffer, sizeof(macMasterKeyBuffer));
+	CCHmacUpdate(&versionHmacContext, versionBytes, 0);
+	CCHmacFinal(&versionHmacContext, &versionMac);
+
 	// masterkey assembly:
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
 	masterKey.version = kSETOMasterKeyCurrentVersion;
+	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
 	masterKey.scryptSalt = scryptSalt;
-	masterKey.scryptCostParam = (NSUInteger)costParam;
+	masterKey.scryptCostParam = costParam;
 	masterKey.scryptBlockSize = blockSize;
 	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;
 	masterKey.macMasterKey = wrappedMacMasterKey;
+
 	return masterKey;
 }
 
@@ -201,7 +213,8 @@ static const size_t BLOCK_SIZE = 16;
 	}
 
 	NSParameterAssert(filename);
-	NSData *plaintext = [filename dataUsingEncoding:NSUTF8StringEncoding];
+	NSString *normalizedFilename = [filename precomposedStringWithCanonicalMapping];
+	NSData *plaintext = [normalizedFilename dataUsingEncoding:NSUTF8StringEncoding];
 	unsigned char *ciphertext = malloc(plaintext.length + 16);
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
@@ -294,7 +307,7 @@ static const size_t BLOCK_SIZE = 16;
 	// calculate macs over file chunks:
 	BOOL chunkMacsEqual = YES;
 	uint64_t chunkNumber = 0;
-	NSUInteger ciphertextChunkLength = kSETOCryptomatorCryptorNonceLength + kSETOCryptomatorCryptorChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
+	int ciphertextChunkLength = kSETOCryptomatorCryptorNonceLength + kSETOCryptomatorCryptorChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
 	NSMutableData *ciphertextChunk = [NSMutableData dataWithLength:ciphertextChunkLength];
 	while (input.hasBytesAvailable) {
 		// read chunk:
