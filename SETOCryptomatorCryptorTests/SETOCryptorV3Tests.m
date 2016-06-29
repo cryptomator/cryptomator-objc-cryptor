@@ -1,5 +1,5 @@
 //
-//  SETOCryptomatorCryptorTests.m
+//  SETOCryptorV3Tests.m
 //  SETOCryptomatorCryptor
 //
 //  Created by Sebastian Stenzel on 15/02/15.
@@ -8,14 +8,15 @@
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
-#import "SETOCryptomatorCryptor.h"
+#import "SETOCryptorV3.h"
+#import "SETOCryptorProvider.h"
 #import "SETOMasterKey.h"
 
-@interface SETOCryptomatorCryptorTests : XCTestCase
-@property (nonatomic, strong) SETOCryptomatorCryptor *cryptor;
+@interface SETOCryptorV3Tests : XCTestCase
+@property (nonatomic, strong) SETOCryptor *cryptor;
 @end
 
-@implementation SETOCryptomatorCryptorTests
+@implementation SETOCryptorV3Tests
 
 - (void)setUp {
 	[super setUp];
@@ -23,11 +24,12 @@
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJsonData:masterKeyFileContents]);
+	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
 
-	self.cryptor = [[SETOCryptomatorCryptor alloc] initWithMasterKey:masterKey];
-	SETOCryptomatorCryptorUnlockResult correctPw = [self.cryptor unlockWithPassword:@"asd"];
-	XCTAssertTrue(correctPw == SETOCryptomatorCryptorUnlockSuccess);
+	NSError *error;
+	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:&error];
+	XCTAssertNotNil(self.cryptor);
+	XCTAssertNil(error);
 }
 
 #pragma mark - Authentication
@@ -102,14 +104,9 @@
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJsonData:masterKeyFileContents]);
-
-	SETOCryptomatorCryptor *cryptor = [[SETOCryptomatorCryptor alloc] initWithMasterKey:masterKey];
-	SETOCryptomatorCryptorUnlockResult correctPw = [cryptor unlockWithPassword:@"asd"];
-	XCTAssertTrue(correctPw == SETOCryptomatorCryptorUnlockSuccess);
-
-	SETOCryptomatorCryptorUnlockResult wrongPw = [cryptor unlockWithPassword:@"asdf"];
-	XCTAssertTrue(wrongPw == SETOCryptomatorCryptorUnlockWrongPassword);
+	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:nil]);
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" error:nil]);
 }
 
 - (void)testDecryption {
@@ -143,13 +140,13 @@
 	XCTestExpectation *decryptionFinished = [self expectationWithDescription:@"decryption of file finished"];
 
 	NSString *largeCiphertextPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"ciphertext" ofType:@"aes"];
-	NSString *fileOutPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"plaintext.jpg"];
+	NSString *fileOutPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"cleartext.jpg"];
 
 	[self.cryptor decryptFileAtPath:largeCiphertextPath toPath:fileOutPath callback:^(NSError *error) {
 		XCTAssertNil(error);
 		
-		NSString *largePlaintextPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"plaintext" ofType:@"jpg"];
-		XCTAssertTrue([[NSFileManager defaultManager] contentsEqualAtPath:fileOutPath andPath:largePlaintextPath]);
+		NSString *largeCleartextPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"cleartext" ofType:@"jpg"];
+		XCTAssertTrue([[NSFileManager defaultManager] contentsEqualAtPath:fileOutPath andPath:largeCleartextPath]);
 		[[NSFileManager defaultManager] removeItemAtPath:fileOutPath error:NULL];
 		
 		[decryptionFinished fulfill];
@@ -170,26 +167,26 @@
 #pragma mark - Encryption & Decryption
 
 - (void)testEncryptionAndDecryptionOfPathComponents {
-	NSString *plaintextPathComponent = @"So oder so ähnlich könnte Ihr Ordner heißen";
-	NSString *ciphertextPathComponent = [self.cryptor encryptFilename:plaintextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
+	NSString *cleartextPathComponent = @"So oder so ähnlich könnte Ihr Ordner heißen";
+	NSString *ciphertextPathComponent = [self.cryptor encryptFilename:cleartextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
 	NSString *decrypted = [self.cryptor decryptFilename:ciphertextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
-	XCTAssertEqualObjects(plaintextPathComponent, decrypted);
+	XCTAssertEqualObjects(cleartextPathComponent, decrypted);
 }
 
 - (void)testEncryptionAndDecryptionWithNewMasterKey {
 	// create key:
-	SETOMasterKey *key = [SETOCryptomatorCryptor newMasterKeyForPassword:@"asd"];
-	SETOCryptomatorCryptor *cryptor = [[SETOCryptomatorCryptor alloc] initWithMasterKey:key];
-	SETOCryptomatorCryptorUnlockResult unlocked = [cryptor unlockWithPassword:@"asd"];
-	XCTAssertTrue(unlocked == SETOCryptomatorCryptorUnlockSuccess);
+	SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
+	XCTAssertNotNil(cryptor);
+	SETOMasterKey *key = [cryptor masterKeyWithPassword:@"asd"];
+	XCTAssertNotNil(key);
 
 	// encrypt:
 	XCTestExpectation *encryptionFinished = [self expectationWithDescription:@"encryption of file finished"];
 	NSString *fileInPath1 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test1.txt"];
 	NSString *fileOutPath1 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test1.aes"];
-	NSString *plaintextFileString1 = @"Wie macht der Uhu? Woot, woot!";
-	NSData *plaintextFileData1 = [plaintextFileString1 dataUsingEncoding:NSUTF8StringEncoding];
-	[plaintextFileData1 writeToFile:fileInPath1 atomically:YES];
+	NSString *cleartextFileString1 = @"Wie macht der Uhu? Woot, woot!";
+	NSData *cleartextFileData1 = [cleartextFileString1 dataUsingEncoding:NSUTF8StringEncoding];
+	[cleartextFileData1 writeToFile:fileInPath1 atomically:YES];
 	[cryptor encryptFileAtPath:fileInPath1 toPath:fileOutPath1 callback:^(NSError *error) {
 		XCTAssertNil(error);
 		
@@ -224,7 +221,7 @@
 		
 		NSData *decrypted = [NSData dataWithContentsOfFile:fileOutPath2];
 		NSString *cleartext = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
-		XCTAssertTrue([plaintextFileString1 isEqualToString:cleartext]);
+		XCTAssertTrue([cleartextFileString1 isEqualToString:cleartext]);
 		[[NSFileManager defaultManager] removeItemAtPath:fileInPath2 error:NULL];
 		[[NSFileManager defaultManager] removeItemAtPath:fileOutPath2 error:NULL];
 		

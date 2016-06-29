@@ -8,8 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-extern NSString *const kSETOMasterKeyFileMimeType;
-extern uint32_t const kSETOMasterKeyCurrentVersion;
+@class SETOCryptor;
 
 extern NSString *const kSETOMasterKeyVersionKey;
 extern NSString *const kSETOMasterKeyVersionMacKey;
@@ -19,6 +18,9 @@ extern NSString *const kSETOMasterKeyScryptBlockSizeKey;
 extern NSString *const kSETOMasterKeyPrimaryMasterKeyKey;
 extern NSString *const kSETOMasterKeyMacMasterKeyKey;
 
+/**
+ *  @c SETOMasterKey holds the information necessary for the master key.
+ */
 @interface SETOMasterKey : NSObject
 
 @property (nonatomic, readonly) uint32_t version;
@@ -29,9 +31,27 @@ extern NSString *const kSETOMasterKeyMacMasterKeyKey;
 @property (nonatomic, readonly) NSData *primaryMasterKey;
 @property (nonatomic, readonly) NSData *macMasterKey;
 
+/**
+ *  Creates a dictionary representation of this master key.
+ */
 @property (nonatomic, readonly, getter=dictionaryRepresentation) NSDictionary *dictionaryRepresentation;
 
-- (BOOL)updateFromJsonData:(NSData *)jsonData;
+/**
+ *  Updates master key from specified JSON data.
+ *
+ *  @param jsonData The master key data in JSON format.
+ *
+ *  @return @c YES, if the master key has been successfully updated, otherwise @c NO.
+ */
+- (BOOL)updateFromJSONData:(NSData *)jsonData;
+
+/**
+ *  Updates master key from specified dictionary.
+ *
+ *  @param dictionary The master key data as dictionary.
+ *
+ *  @return @c YES, if the master key has been successfully updated, otherwise @c NO.
+ */
 - (BOOL)updateFromDictionary:(NSDictionary *)dictionary;
 
 @end

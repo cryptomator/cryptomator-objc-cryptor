@@ -1,16 +1,17 @@
 //
-//  SETOCryptomatorCryptor.m
+//  SETOCryptorV3.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Sebastian Stenzel on 14/02/15.
+//  Created by Tobias Hagemann on 22/06/16.
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
-#import "SETOCryptomatorCryptor.h"
+#import "SETOCryptorV3.h"
+#import "SETOMasterKey.h"
+
+#import "NSString+SETOBase32Validation.h"
 #import "SETOAesSivCipherUtil.h"
 #import "SETOCryptoSupport.h"
-#import "SETOMasterKey.h"
-#import "NSString+SETOBase32Validation.h"
 
 #import <CommonCrypto/CommonCryptor.h>
 #import <CommonCrypto/CommonDigest.h>
@@ -34,46 +35,32 @@
 
 #pragma mark -
 
-NSString *const kSETOCryptomatorCryptorErrorDomain = @"SETOCryptomatorCryptorErrorDomain";
+uint32_t const kSETOCryptorV3Version = 4; // counter-intuitive, but version 3 and 4 are cryptographically the same, that's why we're using the highest version number
+size_t const kSETOCryptorV3BlockSize = 16;
+int const kSETOCryptorV3KeyLength = 256;
+int const kSETOCryptorV3NonceLength = 16;
+int const kSETOCryptorV3HeaderLength = 88;
+int const kSETOCryptorV3HeaderPayloadLength = 40;
+int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
-int const kSETOCryptomatorCryptorKeyLength = 256;
-int const kSETOCryptomatorCryptorNonceLength = 16;
-int const kSETOCryptomatorCryptorHeaderLength = 88;
-int const kSETOCryptomatorCryptorHeaderPayloadLength = 40;
-int const kSETOCryptomatorCryptorChunkPayloadLength = 32 * 1024;
-
-@interface SETOCryptomatorCryptor ()
-@property (nonatomic, strong) SETOMasterKey *masterKey;
+@interface SETOCryptorV3 ()
 @property (nonatomic, copy) NSData *primaryMasterKey;
 @property (nonatomic, copy) NSData *macMasterKey;
 @end
 
-@implementation SETOCryptomatorCryptor
+@implementation SETOCryptorV3
 
-static const size_t BLOCK_SIZE = 16;
+#pragma mark - Initialization
 
-#pragma mark - Initialization and Unlocking
-
-+ (SETOMasterKey *)newMasterKeyForPassword:(NSString *)password {
+- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
 	if ([NSThread isMainThread]) {
 		NSLog(@"Warning: This method should be called from a background thread, as random number generation will benefit from UI interaction.");
 	}
 
+	// create random bytes for scrypt salt:
 	unsigned char scryptSaltBuffer[8];
 	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(scryptSaltBuffer), scryptSaltBuffer) == -1) {
 		NSLog(@"Unable to create random bytes for scryptSaltBuffer.");
-		return nil;
-	}
-
-	unsigned char primaryMasterKeyBuffer[32];
-	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(primaryMasterKeyBuffer), primaryMasterKeyBuffer) == -1) {
-		NSLog(@"Unable to create random bytes for primaryMasterKeyBuffer.");
-		return nil;
-	}
-
-	unsigned char macMasterKeyBuffer[32];
-	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(macMasterKeyBuffer), macMasterKeyBuffer) == -1) {
-		NSLog(@"Unable to create random bytes for macMasterKeyBuffer.");
 		return nil;
 	}
 
@@ -82,7 +69,7 @@ static const size_t BLOCK_SIZE = 16;
 	NSData *scryptSalt = [NSData dataWithBytes:scryptSaltBuffer length:sizeof(scryptSaltBuffer)];
 	uint64_t costParam = 16384;
 	uint32_t blockSize = 8;
-	unsigned char kekBytes[kSETOCryptomatorCryptorKeyLength / 8];
+	unsigned char kekBytes[kSETOCryptorV3KeyLength / 8];
 	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
 
 	// key wrapping:
@@ -90,26 +77,26 @@ static const size_t BLOCK_SIZE = 16;
 	EVP_CIPHER_CTX ctx;
 	EVP_CIPHER_CTX_init(&ctx);
 	EVP_EncryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptomatorCryptorKeyLength / 8 + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, primaryMasterKeyBuffer, sizeof(primaryMasterKeyBuffer));
+	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, self.primaryMasterKey.bytes, (unsigned int)self.primaryMasterKey.length);
 	NSData *wrappedPrimaryMasterKey = [NSData dataWithBytes:wrappedPrimaryMasterKeyBuffer length:sizeof(wrappedPrimaryMasterKeyBuffer)];
-	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptomatorCryptorKeyLength / 8 + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, macMasterKeyBuffer, sizeof(macMasterKeyBuffer));
+	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, self.macMasterKey.bytes, (unsigned int)self.macMasterKey.length);
 	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
 	EVP_CIPHER_CTX_cleanup(&ctx);
 
 	// calculate mac over version:
 	unsigned char versionMac[CC_SHA256_DIGEST_LENGTH];
 	unsigned char versionBytes[sizeof(uint32_t)] = {0};
-	int_to_big_endian_bytes(kSETOMasterKeyCurrentVersion, versionBytes);
+	int_to_big_endian_bytes(kSETOCryptorV3Version, versionBytes);
 	CCHmacContext versionHmacContext;
-	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, macMasterKeyBuffer, sizeof(macMasterKeyBuffer));
+	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, (size_t)self.macMasterKey.length);
 	CCHmacUpdate(&versionHmacContext, versionBytes, 0);
 	CCHmacFinal(&versionHmacContext, &versionMac);
 
-	// masterkey assembly:
+	// master key assembly:
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	masterKey.version = kSETOMasterKeyCurrentVersion;
+	masterKey.version = kSETOCryptorV3Version;
 	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
 	masterKey.scryptSalt = scryptSalt;
 	masterKey.scryptCostParam = costParam;
@@ -117,121 +104,43 @@ static const size_t BLOCK_SIZE = 16;
 	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;
 	masterKey.macMasterKey = wrappedMacMasterKey;
 
-	return masterKey;
-}
-
-- (instancetype)initWithMasterKey:(SETOMasterKey *)masterKey {
-	NSParameterAssert(masterKey);
-	if (self = [super init]) {
-		self.masterKey = masterKey;
-	}
-	return self;
-}
-
-- (SETOCryptomatorCryptorUnlockResult)unlockWithPassword:(NSString *)password {
-	NSParameterAssert(password);
-
-	if (self.masterKey.version != kSETOMasterKeyCurrentVersion) {
-		return SETOCryptomatorCryptorUnlockVersionMismatch;
-	}
-
-	// scrypt key derivation:
-	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-	NSData *scryptSalt = self.masterKey.scryptSalt;
-	uint64_t costParam = self.masterKey.scryptCostParam;
-	uint32_t blockSize = (uint32_t)self.masterKey.scryptBlockSize;
-	unsigned char kekBytes[kSETOCryptomatorCryptorKeyLength / 8];
-	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
-
-	// unwrap primary and mac master keys:
-	const EVP_CIPHER *cipher = EVP_aes_256_ecb();
-	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
-	EVP_DecryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-
-	NSData *wrappedPrimaryMasterKey = self.masterKey.primaryMasterKey;
-	unsigned char unwrappedPrimaryMasterKeyBuffer[kSETOCryptomatorCryptorKeyLength / 8];
-	int unwrappedPrimaryMasterKeyLength = EVP_aes_unwrap_key(&ctx, NULL, unwrappedPrimaryMasterKeyBuffer, wrappedPrimaryMasterKey.bytes, (int)wrappedPrimaryMasterKey.length);
-
-	NSData *wrappedMacMasterKey = self.masterKey.macMasterKey;
-	unsigned char unwrappedMacMasterKeyBuffer[kSETOCryptomatorCryptorKeyLength / 8];
-	int unwrappedMacMasterKeyLength = EVP_aes_unwrap_key(&ctx, NULL, unwrappedMacMasterKeyBuffer, wrappedMacMasterKey.bytes, (int)wrappedMacMasterKey.length);
-
-	EVP_CIPHER_CTX_cleanup(&ctx);
-
-	// check for key lengths, zero length means password is wrong:
-	if (unwrappedPrimaryMasterKeyLength == 0 || unwrappedMacMasterKeyLength == 0) {
-		return SETOCryptomatorCryptorUnlockWrongPassword;
-	}
-
-	// initialize master keys:
-	self.primaryMasterKey = [NSData dataWithBytes:unwrappedPrimaryMasterKeyBuffer length:unwrappedPrimaryMasterKeyLength];
-	self.macMasterKey = [NSData dataWithBytes:unwrappedMacMasterKeyBuffer length:unwrappedMacMasterKeyLength];
-
-	// clean up:
-	for (int i = 0; i < unwrappedPrimaryMasterKeyLength; i++) {
-		unwrappedPrimaryMasterKeyBuffer[i] = 0;
-	}
-	for (int i = 0; i < unwrappedMacMasterKeyLength; i++) {
-		unwrappedMacMasterKeyBuffer[i] = 0;
-	}
-
 	// done:
-	return SETOCryptomatorCryptorUnlockSuccess;
-}
-
-- (BOOL)isUnlocked {
-	return self.primaryMasterKey && self.macMasterKey;
+	return masterKey;
 }
 
 #pragma mark - Path Encryption and Decryption
 
 - (NSString *)encryptDirectoryId:(NSString *)directoryId {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to encrypt directory id: Unlock this cryptor by using unlockWithPassword: first.");
-		return nil;
-	}
-
 	NSParameterAssert(directoryId);
-	NSData *plaintext = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
-	unsigned char *ciphertext = malloc(plaintext.length + 16);
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, plaintext.bytes, plaintext.length, 0, NULL, NULL, ciphertext)) {
+	NSData *cleartext = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
+	unsigned char *ciphertext = malloc(cleartext.length + 16);
+	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 0, NULL, NULL, ciphertext)) {
 		free(ciphertext);
 		return nil;
 	}
 	unsigned char hashed[CC_SHA1_DIGEST_LENGTH];
-	CC_SHA1(ciphertext, (CC_LONG)plaintext.length + 16, hashed);
+	CC_SHA1(ciphertext, (CC_LONG)cleartext.length + 16, hashed);
 	free(ciphertext);
 	NSData *ciphertextData = [NSData dataWithBytes:hashed length:CC_SHA1_DIGEST_LENGTH];
 	return [ciphertextData base32String];
 }
 
 - (NSString *)encryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to encrypt filename: Unlock this cryptor by using unlockWithPassword: first.");
-		return nil;
-	}
-
 	NSParameterAssert(filename);
-	NSData *plaintext = [filename dataUsingEncoding:NSUTF8StringEncoding];
-	unsigned char *ciphertext = malloc(plaintext.length + 16);
+	NSData *cleartext = [filename dataUsingEncoding:NSUTF8StringEncoding];
+	unsigned char *ciphertext = malloc(cleartext.length + 16);
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
 	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, plaintext.bytes, plaintext.length, 1, additionalData, additionalDataSizes, ciphertext)) {
+	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 1, additionalData, additionalDataSizes, ciphertext)) {
 		free(ciphertext);
 		return nil;
 	}
-	NSData *ciphertextData = [NSData dataWithBytesNoCopy:ciphertext length:plaintext.length + 16];
+	NSData *ciphertextData = [NSData dataWithBytesNoCopy:ciphertext length:cleartext.length + 16];
 	return [ciphertextData base32String];
 }
 
 - (NSString *)decryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to decrypt filename: Unlock this cryptor by using unlockWithPassword: first.");
-		return nil;
-	}
-
 	NSParameterAssert(filename);
 	if (!filename.seto_isValidBase32Encoded) {
 		return nil;
@@ -240,26 +149,21 @@ static const size_t BLOCK_SIZE = 16;
 	if (!ciphertext) {
 		return nil;
 	}
-	unsigned char *plaintext = malloc(ciphertext.length - 16);
+	unsigned char *cleartext = malloc(ciphertext.length - 16);
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
 	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_dec(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, ciphertext.bytes, ciphertext.length, 1, additionalData, additionalDataSizes, plaintext)) {
-		free(plaintext);
+	if (siv_dec(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, ciphertext.bytes, ciphertext.length, 1, additionalData, additionalDataSizes, cleartext)) {
+		free(cleartext);
 		return nil;
 	}
-	NSData *plaintextData = [NSData dataWithBytesNoCopy:plaintext length:ciphertext.length - 16];
-	return [[NSString alloc] initWithData:plaintextData encoding:NSUTF8StringEncoding];
+	NSData *cleartextData = [NSData dataWithBytesNoCopy:cleartext length:ciphertext.length - 16];
+	return [[NSString alloc] initWithData:cleartextData encoding:NSUTF8StringEncoding];
 }
 
 #pragma mark - File Content Encryption and Decryption
 
-- (void)authenticateFileAtPath:(NSString *)path callback:(SETOCryptomatorCryptorCompletionCallback)callback progress:(SETOCryptomatorCryptorProgressCallback)progressCallback {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to authenticate file: Unlock this cryptor by using unlockWithPassword: first.");
-		return;
-	}
-
+- (void)authenticateFileAtPath:(NSString *)path callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback {
 	NSParameterAssert(path);
 	NSParameterAssert(callback);
 
@@ -284,11 +188,11 @@ static const size_t BLOCK_SIZE = 16;
 	[input open];
 
 	// read file header:
-	unsigned char header[kSETOCryptomatorCryptorHeaderLength];
+	unsigned char header[kSETOCryptorV3HeaderLength];
 	int inputLength = (int)[input read:header maxLength:sizeof(header)];
 	if (inputLength != sizeof(header)) {
 		[input close];
-		callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorCorruptedFileHeaderError userInfo:nil]);
+		callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorCorruptedFileHeaderError userInfo:nil]);
 		return;
 	}
 	bytesProcessed += inputLength;
@@ -306,7 +210,7 @@ static const size_t BLOCK_SIZE = 16;
 	// calculate macs over file chunks:
 	BOOL chunkMacsEqual = YES;
 	uint64_t chunkNumber = 0;
-	int ciphertextChunkLength = kSETOCryptomatorCryptorNonceLength + kSETOCryptomatorCryptorChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
+	int ciphertextChunkLength = kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
 	NSMutableData *ciphertextChunk = [NSMutableData dataWithLength:ciphertextChunkLength];
 	while (input.hasBytesAvailable) {
 		// read chunk:
@@ -314,9 +218,9 @@ static const size_t BLOCK_SIZE = 16;
 		int inputLength = (int)[input read:ciphertextChunkBuffer maxLength:ciphertextChunkLength];
 		if (inputLength == 0) {
 			continue;
-		} else if (inputLength < kSETOCryptomatorCryptorNonceLength + CC_SHA256_DIGEST_LENGTH) {
+		} else if (inputLength < kSETOCryptorV3NonceLength + CC_SHA256_DIGEST_LENGTH) {
 			[input close];
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorAuthenticationFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorAuthenticationFailedError userInfo:nil]);
 			return;
 		}
 
@@ -325,8 +229,8 @@ static const size_t BLOCK_SIZE = 16;
 		unsigned char calculatedMac[CC_SHA256_DIGEST_LENGTH];
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		unsigned char *nonce = &ciphertextChunkBuffer[0];
-		unsigned char *payload = &ciphertextChunkBuffer[kSETOCryptomatorCryptorNonceLength];
-		int payloadLength = inputLength - kSETOCryptomatorCryptorNonceLength - CC_SHA256_DIGEST_LENGTH;
+		unsigned char *payload = &ciphertextChunkBuffer[kSETOCryptorV3NonceLength];
+		int payloadLength = inputLength - kSETOCryptorV3NonceLength - CC_SHA256_DIGEST_LENGTH;
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 
 		// calculate chunk mac:
@@ -334,7 +238,7 @@ static const size_t BLOCK_SIZE = 16;
 		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
 		CCHmacUpdate(&chunkHmacContext, iv, 16);
 		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
-		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptomatorCryptorNonceLength);
+		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptorV3NonceLength);
 		CCHmacUpdate(&chunkHmacContext, payload, payloadLength);
 		CCHmacFinal(&chunkHmacContext, calculatedMac);
 
@@ -363,20 +267,15 @@ static const size_t BLOCK_SIZE = 16;
 	if (progressCallback) {
 		progressCallback(1.0);
 	}
-	callback(headerMacsEqual && chunkMacsEqual ? nil : [NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorAuthenticationFailedError userInfo:nil]);
+	callback(headerMacsEqual && chunkMacsEqual ? nil : [NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorAuthenticationFailedError userInfo:nil]);
 }
 
-- (void)encryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptomatorCryptorCompletionCallback)callback progress:(SETOCryptomatorCryptorProgressCallback)progressCallback {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to encrypt file: Unlock this cryptor by using unlockWithPassword: first.");
-		return;
-	}
-
+- (void)encryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback {
 	NSParameterAssert(inPath);
 	NSParameterAssert(outPath);
 	NSParameterAssert(callback);
 
-	// read plaintext file size:
+	// read cleartext file size:
 	NSError *filesAttributesError;
 	NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:inPath error:&filesAttributesError];
 	if (filesAttributesError) {
@@ -397,11 +296,11 @@ static const size_t BLOCK_SIZE = 16;
 	}
 
 	// allocate file header buffer:
-	unsigned char header[kSETOCryptomatorCryptorHeaderLength];
+	unsigned char header[kSETOCryptorV3HeaderLength];
 
 	// create random iv:
 	if (SecRandomCopyBytes(kSecRandomDefault, 16, header) == -1) {
-		callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+		callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 		return;
 	}
 	unsigned char *iv = &header[0];
@@ -410,14 +309,14 @@ static const size_t BLOCK_SIZE = 16;
 	// create random file key:
 	unsigned char fileKey[32];
 	if (SecRandomCopyBytes(kSecRandomDefault, 32, fileKey) == -1) {
-		callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+		callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 		return;
 	}
 
 	// encrypt header data:
-	unsigned char plaintextHeaderPayload[kSETOCryptomatorCryptorHeaderPayloadLength];
-	long_to_big_endian_bytes(fileSize, plaintextHeaderPayload);
-	memcpy(&plaintextHeaderPayload[8], fileKey, sizeof(fileKey));
+	unsigned char cleartextHeaderPayload[kSETOCryptorV3HeaderPayloadLength];
+	long_to_big_endian_bytes(fileSize, cleartextHeaderPayload);
+	memcpy(&cleartextHeaderPayload[8], fileKey, sizeof(fileKey));
 	{
 		const EVP_CIPHER *ctrCipher = EVP_aes_256_ctr();
 		EVP_CIPHER_CTX ctx;
@@ -425,10 +324,10 @@ static const size_t BLOCK_SIZE = 16;
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
 		int bytesEncrypted = 0;
-		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, plaintextHeaderPayload, kSETOCryptomatorCryptorHeaderPayloadLength);
-		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptomatorCryptorHeaderPayloadLength) {
+		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, cleartextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
+		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptorV3HeaderPayloadLength) {
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
 		}
 		EVP_CIPHER_CTX_cleanup(&ctx);
@@ -440,7 +339,7 @@ static const size_t BLOCK_SIZE = 16;
 	CCHmacUpdate(&headerHmacContext, header, 56);
 	CCHmacFinal(&headerHmacContext, &header[56]);
 
-	// open plaintext input stream:
+	// open cleartext input stream:
 	NSInputStream *input = [NSInputStream inputStreamWithFileAtPath:inPath];
 	[input scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 	[input open];
@@ -459,32 +358,32 @@ static const size_t BLOCK_SIZE = 16;
 	uint64_t chunkNumber = 0;
 	while (input.hasBytesAvailable && bytesProcessed < bytesTotal) {
 		// read chunk:
-		int plaintextChunkLength = kSETOCryptomatorCryptorChunkPayloadLength;
-		unsigned char plaintextChunk[plaintextChunkLength];
-		int inputLength = (int)[input read:plaintextChunk maxLength:plaintextChunkLength];
+		int cleartextChunkLength = kSETOCryptorV3ChunkPayloadLength;
+		unsigned char cleartextChunk[cleartextChunkLength];
+		int inputLength = (int)[input read:cleartextChunk maxLength:cleartextChunkLength];
 		if (inputLength == 0) {
 			continue;
 		} else if (inputLength < 0) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
 		}
 
 		// add padding if necessary:
 		uint64_t bytesRemaining = bytesTotal - bytesProcessed;
-		int payloadLength = (int)MIN(bytesRemaining, kSETOCryptomatorCryptorChunkPayloadLength);
+		int payloadLength = (int)MIN(bytesRemaining, kSETOCryptorV3ChunkPayloadLength);
 		int paddingLength = payloadLength - inputLength;
-		arc4random_buf(&plaintextChunk[inputLength], paddingLength);
+		arc4random_buf(&cleartextChunk[inputLength], paddingLength);
 		inputLength += paddingLength;
 
 		// init encryption:
-		int ciphertextChunkLength = kSETOCryptomatorCryptorNonceLength + payloadLength + CC_SHA256_DIGEST_LENGTH;
-		unsigned char ciphertextChunk[ciphertextChunkLength + BLOCK_SIZE];
+		int ciphertextChunkLength = kSETOCryptorV3NonceLength + payloadLength + CC_SHA256_DIGEST_LENGTH;
+		unsigned char ciphertextChunk[ciphertextChunkLength + kSETOCryptorV3BlockSize];
 		unsigned char *nonce = &ciphertextChunk[0];
 		if (SecRandomCopyBytes(kSecRandomDefault, 16, nonce) == -1) {
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
 		}
 		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, fileKey, nonce);
@@ -492,17 +391,17 @@ static const size_t BLOCK_SIZE = 16;
 		// encrypt chunk:
 		int bytesEncrypted;
 		unsigned char *payload = &ciphertextChunk[16];
-		int encryptStatus = EVP_EncryptUpdate(&ctx, payload, &bytesEncrypted, plaintextChunk, inputLength);
+		int encryptStatus = EVP_EncryptUpdate(&ctx, payload, &bytesEncrypted, cleartextChunk, inputLength);
 		if (encryptStatus == 0 || bytesEncrypted != payloadLength) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
 		}
 
 		// authenticate ciphertext chunk:
-		unsigned char *chunkMac = &ciphertextChunk[kSETOCryptomatorCryptorNonceLength + bytesEncrypted];
+		unsigned char *chunkMac = &ciphertextChunk[kSETOCryptorV3NonceLength + bytesEncrypted];
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 		CCHmacContext chunkHmacContext;
@@ -519,7 +418,7 @@ static const size_t BLOCK_SIZE = 16;
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorEncryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
 		}
 
@@ -541,12 +440,7 @@ static const size_t BLOCK_SIZE = 16;
 	callback(nil);
 }
 
-- (void)decryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptomatorCryptorCompletionCallback)callback progress:(SETOCryptomatorCryptorProgressCallback)progressCallback {
-	if (![self isUnlocked]) {
-		NSLog(@"Unable to decrypt file: Unlock this cryptor by using unlockWithPassword: first.");
-		return;
-	}
-
+- (void)decryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback {
 	NSParameterAssert(inPath);
 	NSParameterAssert(outPath);
 	NSParameterAssert(callback);
@@ -557,11 +451,11 @@ static const size_t BLOCK_SIZE = 16;
 	[input open];
 
 	// read file header:
-	unsigned char header[kSETOCryptomatorCryptorHeaderLength];
+	unsigned char header[kSETOCryptorV3HeaderLength];
 	int inputLength = (int)[input read:header maxLength:sizeof(header)];
 	if (inputLength != sizeof(header)) {
 		[input close];
-		callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorCorruptedFileHeaderError userInfo:nil]);
+		callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorCorruptedFileHeaderError userInfo:nil]);
 		return;
 	}
 
@@ -570,7 +464,7 @@ static const size_t BLOCK_SIZE = 16;
 	unsigned char *ciphertextHeaderPayload = &header[16];
 
 	// decrypt header data:
-	unsigned char plaintextHeaderPayload[kSETOCryptomatorCryptorHeaderPayloadLength + BLOCK_SIZE];
+	unsigned char cleartextHeaderPayload[kSETOCryptorV3HeaderPayloadLength + kSETOCryptorV3BlockSize];
 	{
 		const EVP_CIPHER *ctrCipher = EVP_aes_256_ctr();
 		EVP_CIPHER_CTX ctx;
@@ -578,19 +472,19 @@ static const size_t BLOCK_SIZE = 16;
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
 		int bytesDecrypted = 0;
-		int decryptStatus = EVP_DecryptUpdate(&ctx, plaintextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptomatorCryptorHeaderPayloadLength);
-		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptomatorCryptorHeaderPayloadLength) {
+		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
+		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptorV3HeaderPayloadLength) {
 			[input close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorCorruptedFileHeaderError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorCorruptedFileHeaderError userInfo:nil]);
 			return;
 		}
 		EVP_CIPHER_CTX_cleanup(&ctx);
 	}
 
 	// extract file size and file key:
-	uint64_t fileSize = big_endian_bytes_to_long(&plaintextHeaderPayload[0]);
-	unsigned char *fileKey = &plaintextHeaderPayload[8];
+	uint64_t fileSize = big_endian_bytes_to_long(&cleartextHeaderPayload[0]);
+	unsigned char *fileKey = &cleartextHeaderPayload[8];
 
 	// initialize bytes processed:
 	uint64_t bytesProcessed = 0;
@@ -598,7 +492,7 @@ static const size_t BLOCK_SIZE = 16;
 		progressCallback(0.0);
 	}
 
-	// open plaintext output stream:
+	// open cleartext output stream:
 	NSOutputStream *output = [NSOutputStream outputStreamToFileAtPath:outPath append:NO];
 	[output scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 	[output open];
@@ -610,49 +504,49 @@ static const size_t BLOCK_SIZE = 16;
 	EVP_CIPHER_CTX_set_padding(&ctx, 0);
 	while (input.hasBytesAvailable && bytesProcessed < fileSize) {
 		// read chunk:
-		int ciphertextChunkLength = kSETOCryptomatorCryptorNonceLength + kSETOCryptomatorCryptorChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
+		int ciphertextChunkLength = kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
 		unsigned char ciphertextChunk[ciphertextChunkLength];
 		int inputLength = (int)[input read:ciphertextChunk maxLength:ciphertextChunkLength];
 		if (inputLength == 0) {
 			continue;
-		} else if (inputLength < kSETOCryptomatorCryptorNonceLength + CC_SHA256_DIGEST_LENGTH) {
+		} else if (inputLength < kSETOCryptorV3NonceLength + CC_SHA256_DIGEST_LENGTH) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorDecryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorDecryptionFailedError userInfo:nil]);
 			return;
 		}
 
 		// init decryption:
 		unsigned char *nonce = &ciphertextChunk[0];
-		unsigned char *payload = &ciphertextChunk[kSETOCryptomatorCryptorNonceLength];
+		unsigned char *payload = &ciphertextChunk[kSETOCryptorV3NonceLength];
 		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, fileKey, nonce);
 
 		// calculate payload length:
-		int payloadLength = inputLength - kSETOCryptomatorCryptorNonceLength - CC_SHA256_DIGEST_LENGTH;
+		int payloadLength = inputLength - kSETOCryptorV3NonceLength - CC_SHA256_DIGEST_LENGTH;
 		uint64_t remainingFileSize = fileSize - bytesProcessed;
 		int remainingPayloadLength = payloadLength < remainingFileSize ? payloadLength : (int)remainingFileSize; // ignore padding if necessary
 
 		// decrypt chunk:
-		int plaintextChunkLength = payloadLength + BLOCK_SIZE;
-		unsigned char plaintextChunk[plaintextChunkLength];
+		int cleartextChunkLength = payloadLength + kSETOCryptorV3BlockSize;
+		unsigned char cleartextChunk[cleartextChunkLength];
 		int outputLength = 0;
-		int decryptStatus = EVP_DecryptUpdate(&ctx, plaintextChunk, &outputLength, payload, remainingPayloadLength);
+		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextChunk, &outputLength, payload, remainingPayloadLength);
 		if (decryptStatus == 0) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorDecryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorDecryptionFailedError userInfo:nil]);
 			return;
 		}
 
-		// write plaintext chunk:
-		int bytesWritten = (int)[output write:plaintextChunk maxLength:outputLength];
+		// write cleartext chunk:
+		int bytesWritten = (int)[output write:cleartextChunk maxLength:outputLength];
 		if (bytesWritten != outputLength) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			callback([NSError errorWithDomain:kSETOCryptomatorCryptorErrorDomain code:SETOCryptomatorCryptorDecryptionFailedError userInfo:nil]);
+			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorDecryptionFailedError userInfo:nil]);
 			return;
 		}
 

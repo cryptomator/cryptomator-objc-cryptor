@@ -15,45 +15,59 @@ SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults. 
 
 The easiest way to use SETOCryptomatorCryptor in your app is via [CocoaPods](http://cocoapods.org/ "CocoaPods").
 
-1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.0'`
+1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.1.0'`
 2. Run the command `pod install` from the Podfile folder directory.
 
 ## Usage
 
-### SETOCryptomatorCryptor
+### SETOCryptorProvider
 
-`SETOCryptomatorCryptor` is the core class for cryptographic operations on Cryptomator vaults.
+`SETOCryptorProvider` is a factory for `SETOCryptor` objects. Always use the factory for creating `SETOCryptor` instances.
 
-#### Initialization and Unlocking
+#### Create New Cryptor & Master Key
 
 ```objective-c
 NSString *password = ...;
-SETOMasterKey *masterKey = [SETOCryptomatorCryptor newMasterKeyForPassword:password];
-SETOCryptomatorCryptor *cryptor = [[SETOCryptomatorCryptor alloc] initWithMasterKey:masterKey];
-SETOCryptomatorCryptorUnlockResult unlockResult = [cryptor unlockWithPassword:password];
-if (unlockResult == SETOCryptomatorCryptorUnlockSuccess) {
-  NSLog(@"Unlock successful");
-} else {
-  NSLog(@"Unlock failed: %zd", unlockResult);
-}
+SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
+SETOMasterKey *masterKey = [cryptor masterKeyWithPassword:password];
 ```
 
-Actually you should call the method `newMasterKeyForPassword:` from a background thread, as random number generation will benefit from UI interaction.
+Actually, you should call these methods from a background thread, as random number generation will benefit from UI interaction.
 
 ```objective-c
 NSString *password = ...;
-dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-  SETOMasterKey *masterKey = [SETOCryptomatorCryptor newMasterKeyForPassword:password];
+dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+  SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
+  SETOMasterKey *masterKey = [cryptor masterKeyWithPassword:password];
   dispatch_async(dispatch_get_main_queue(), ^{
     // do the rest here
   });
 });
 ```
 
+#### Create Cryptor From Existing Master Key
+
+This is equivalent to an unlock attempt.
+
+```objective-c
+SETOMasterKey *masterKey = ...;
+NSError *error;
+SETOCryptor *cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:password error:&error];
+if (error) {
+  NSLog(@"Unlock Error: %@", error);
+} else {
+  NSLog(@"Unlock Success");
+}
+```
+
+### SETOCryptor
+
+`SETOCryptor` is the core class for cryptographic operations on Cryptomator vaults. This is an abstract class, so you should use `SETOCryptorProvider` to create a `SETOCryptor` instance.
+
 #### Directory ID Encryption
 
 ```objective-c
-SETOCryptomatorCryptor *cryptor = ...;
+SETOCryptor *cryptor = ...;
 NSString *directoryId = ...;
 NSString *encryptedDirectoryId = [cryptor encryptDirectoryId:directoryId];
 ```
@@ -61,7 +75,7 @@ NSString *encryptedDirectoryId = [cryptor encryptDirectoryId:directoryId];
 #### Filename Encryption and Decryption
 
 ```objective-c
-SETOCryptomatorCryptor *cryptor = ...;
+SETOCryptor *cryptor = ...;
 NSString *filename = ...;
 NSString *directoryId = ...;
 NSString *encryptedFilename = [cryptor encryptFilename:filename insideDirectoryWithId:directoryId];
@@ -71,7 +85,7 @@ NSString *decryptedFilename = [cryptor decryptFilename:encryptedFilename insideD
 #### File Content Authentication
 
 ```objective-c
-SETOCryptomatorCryptor *cryptor = ...;
+SETOCryptor *cryptor = ...;
 NSString *ciphertextFilePath = ...;
 [cryptor authenticateFileAtPath:ciphertextFilePath callback:^(NSError *error) {
   if (error) {
@@ -87,10 +101,10 @@ NSString *ciphertextFilePath = ...;
 #### File Content Encryption
 
 ```objective-c
-SETOCryptomatorCryptor *cryptor = ...;
-NSString *plaintextFilePath = ...;
+SETOCryptor *cryptor = ...;
+NSString *cleartextFilePath = ...;
 NSString *ciphertextFilePath = ...;
-[cryptor encryptFileAtPath:plaintextFilePath toPath:ciphertextFilePath callback:^(NSError *error) {
+[cryptor encryptFileAtPath:cleartextFilePath toPath:ciphertextFilePath callback:^(NSError *error) {
   if (error) {
     NSLog(@"Encryption Error: %@", error);
   } else {
@@ -104,10 +118,10 @@ NSString *ciphertextFilePath = ...;
 #### File Content Decryption
 
 ```objective-c
-SETOCryptomatorCryptor *cryptor = ...;
+SETOCryptor *cryptor = ...;
 NSString *ciphertextFilePath = ...;
-NSString *plaintextFilePath = ...;
-[cryptor decryptFileAtPath:ciphertextFilePath toPath:plaintextFilePath callback:^(NSError *error) {
+NSString *cleartextFilePath = ...;
+[cryptor decryptFileAtPath:ciphertextFilePath toPath:cleartextFilePath callback:^(NSError *error) {
   if (error) {
     NSLog(@"Decryption Error: %@", error);
   } else {
@@ -118,11 +132,11 @@ NSString *plaintextFilePath = ...;
 }];
 ```
 
-### SETOAsyncCryptomatorCryptor
+### SETOAsyncCryptor
 
-`SETOAsyncCryptomatorCryptor` is a `SETOCryptomatorCryptor` decorator for running file content encryption and decryption operations asynchronously. It's useful for cryptographic operations on large files without blocking the main thread.
+`SETOAsyncCryptor` is a `SETOCryptor` decorator for running file content encryption and decryption operations asynchronously. It's useful for cryptographic operations on large files without blocking the main thread.
 
-Create and initialize `SETOAsyncCryptomatorCryptor` using `initWithMasterKey:queue:` to specify a dispatch queue. If you're initializing with the designated initializer `initWithMasterKey:`, the dispatch queue will be set to `dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)`.
+Create and initialize `SETOAsyncCryptor` using `initWithCryptor:queue:` to specify a dispatch queue. If you're initializing with the convenience initializer `initWithCryptor:`, a serial queue (utility QoS class) will be created and used.
 
 ### SETOMasterKey
 
