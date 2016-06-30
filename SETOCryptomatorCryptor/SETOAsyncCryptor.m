@@ -10,7 +10,7 @@
 
 @interface SETOAsyncCryptor ()
 @property (nonatomic, strong) SETOCryptor *cryptor;
-@property (nonatomic, assign) dispatch_queue_t queue;
+@property (nonatomic, strong) dispatch_queue_t queue;
 @end
 
 @implementation SETOAsyncCryptor
