@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.1.1
+
+- Fixed typo, `SETOCryptorProviderError` enum was wrongly named.
+
 ## Version 1.1.0
 
 Updated the API and usage significantly. This framework has been tuned to support multiple vault formats. Versions `3` and `4` are cryptographically identical, however these changes are still necessary, because the versions do not only represent a cryptographic version.

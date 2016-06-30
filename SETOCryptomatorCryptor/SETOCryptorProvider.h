@@ -12,7 +12,7 @@
 
 extern NSString *const kSETOCryptorProviderErrorDomain;
 
-typedef NS_ENUM(NSInteger, SETOCryptorProviderErrorDomain) {
+typedef NS_ENUM(NSInteger, SETOCryptorProviderError) {
 	SETOCryptorProviderUnsupportedVaultFormatError,
 	SETOCryptorProviderInvalidPasswordError
 };
