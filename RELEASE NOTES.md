@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.1.4
+
+- `SETOCryptor` version is now an accessible property.
+
 ## Version 1.1.3
 
 - Fixed crash in `SETOAsyncCryptor`, dispatch queue property has to be defined as `strong`.

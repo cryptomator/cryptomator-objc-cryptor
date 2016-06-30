@@ -20,7 +20,7 @@
 - (instancetype)initWithCryptor:(SETOCryptor *)cryptor queue:(dispatch_queue_t)queue {
 	NSParameterAssert(cryptor);
 	NSParameterAssert(queue);
-	if (self = [super initWithPrimaryMasterKey:nil macMasterKey:nil]) {
+	if (self = [super initWithPrimaryMasterKey:nil macMasterKey:nil version:cryptor.version]) {
 		self.cryptor = cryptor;
 		self.queue = queue;
 	}

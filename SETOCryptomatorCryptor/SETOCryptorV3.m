@@ -35,7 +35,6 @@
 
 #pragma mark -
 
-uint32_t const kSETOCryptorV3Version = 4; // counter-intuitive, but version 3 and 4 are cryptographically the same, that's why we're using the highest version number
 size_t const kSETOCryptorV3BlockSize = 16;
 int const kSETOCryptorV3KeyLength = 256;
 int const kSETOCryptorV3NonceLength = 16;
@@ -88,7 +87,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	// calculate mac over version:
 	unsigned char versionMac[CC_SHA256_DIGEST_LENGTH];
 	unsigned char versionBytes[sizeof(uint32_t)] = {0};
-	int_to_big_endian_bytes(kSETOCryptorV3Version, versionBytes);
+	int_to_big_endian_bytes((uint32_t)self.version, versionBytes);
 	CCHmacContext versionHmacContext;
 	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, (size_t)self.macMasterKey.length);
 	CCHmacUpdate(&versionHmacContext, versionBytes, 0);
@@ -96,7 +95,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 	// master key assembly:
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	masterKey.version = kSETOCryptorV3Version;
+	masterKey.version = (uint32_t)self.version;
 	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
 	masterKey.scryptSalt = scryptSalt;
 	masterKey.scryptCostParam = costParam;

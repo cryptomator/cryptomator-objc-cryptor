@@ -28,6 +28,8 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 @interface SETOCryptor : NSObject
 
+@property (nonatomic, readonly) NSInteger version;
+
 /**---------------------
  *  @name Initialization
  *----------------------
@@ -38,10 +40,11 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  *
  *  @param primaryMasterKey The primary master key.
  *  @param macMasterKey     The MAC master key.
+ *  @param version          The cryptor version.
  *
  *  @return The newly-initialized cryptor.
  */
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(NSInteger)version NS_DESIGNATED_INITIALIZER;
 
 /**
  *  Unavailable initialization method, use -initWithPrimaryMasterKey:macMasterKey: instead.
