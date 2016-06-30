@@ -21,8 +21,6 @@ NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 #pragma mark - Initialization
 
 - (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey {
-	NSParameterAssert(primaryMasterKey);
-	NSParameterAssert(macMasterKey);
 	if (self = [super init]) {
 		self.primaryMasterKey = primaryMasterKey;
 		self.macMasterKey = macMasterKey;

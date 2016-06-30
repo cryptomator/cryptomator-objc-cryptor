@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.1.2
+
+- Removed assertions in `SETOCryptor` initialization for `SETOAsyncCryptor` decorator to work.
+
 ## Version 1.1.1
 
 - Fixed typo, `SETOCryptorProviderError` enum was wrongly named.
