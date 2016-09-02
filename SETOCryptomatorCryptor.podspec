@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'SETOCryptomatorCryptor'
-  s.version  = '1.2.1'
+  s.version  = '1.2.2'
   s.license  = 'MIT'
   s.summary  = 'SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults.'
   s.homepage = 'https://github.com/cryptomator/cryptomator-objc-cryptor'

@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.2.2
+
+- Fixed crash in `SETOAsyncCryptor`, `cleartextChunkSize` and `ciphertextChunkSize` methods are now decorated.
+
 ## Version 1.2.1
 
 - Exposed `SETOCryptorVersion` as a public enum.

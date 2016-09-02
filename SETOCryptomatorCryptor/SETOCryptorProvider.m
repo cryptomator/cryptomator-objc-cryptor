@@ -143,8 +143,8 @@ int const kSETOCryptorProviderKeyLength = 256;
 		NSLog(@"+[SETOCryptorProvider cleartextSizeFromCiphertextSize:withCryptor:] not defined for cryptor version %zd", cryptor.version);
 		return NSUIntegerMax;
 	}
-	NSUInteger cleartextChunkSize = cryptor.cleartextChunkSize;
-	NSUInteger ciphertextChunkSize = cryptor.ciphertextChunkSize;
+	NSUInteger cleartextChunkSize = [cryptor cleartextChunkSize];
+	NSUInteger ciphertextChunkSize = [cryptor ciphertextChunkSize];
 	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
 	NSUInteger numFullChunks = ciphertextSize / ciphertextChunkSize; // floor by int-truncation
 	NSUInteger additionalCiphertextBytes = ciphertextSize % ciphertextChunkSize;
@@ -161,8 +161,8 @@ int const kSETOCryptorProviderKeyLength = 256;
 		NSLog(@"+[SETOCryptorProvider cleartextSizeFromCiphertextSize:withCryptor:] not defined for cryptor version %zd", cryptor.version);
 		return NSUIntegerMax;
 	}
-	NSUInteger cleartextChunkSize = cryptor.cleartextChunkSize;
-	NSUInteger ciphertextChunkSize = cryptor.ciphertextChunkSize;
+	NSUInteger cleartextChunkSize = [cryptor cleartextChunkSize];
+	NSUInteger ciphertextChunkSize = [cryptor ciphertextChunkSize];
 	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
 	NSUInteger numFullChunks = cleartextSize / cleartextChunkSize; // floor by int-truncation
 	NSUInteger additionalCleartextBytes = cleartextSize % cleartextChunkSize;

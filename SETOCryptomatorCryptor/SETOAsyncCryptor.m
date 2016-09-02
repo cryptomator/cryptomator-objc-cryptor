@@ -104,4 +104,14 @@
 	});
 }
 
+#pragma mark - Chunk Sizes
+
+- (NSUInteger)cleartextChunkSize {
+	return [self.cryptor cleartextChunkSize];
+}
+
+- (NSUInteger)ciphertextChunkSize {
+	return [self.cryptor ciphertextChunkSize];
+}
+
 @end
