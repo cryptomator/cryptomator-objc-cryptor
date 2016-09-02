@@ -179,8 +179,6 @@ int const kSETOCryptorProviderKeyLength = 256;
 			return [[SETOCryptorV3 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 		case SETOCryptorVersion5:
 			return [[SETOCryptorV5 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
-		default:
-			return nil;
 	}
 }
 
