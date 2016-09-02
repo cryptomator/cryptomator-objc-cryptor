@@ -1,38 +1,50 @@
 //
-//  SETOCryptorV3Tests.m
+//  SETOCryptorV5Tests.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Sebastian Stenzel on 15/02/15.
+//  Created by Tobias Hagemann on 02/09/16.
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
-#import "SETOCryptorV3.h"
+#import "SETOCryptorV5.h"
 #import "SETOCryptorProvider.h"
 #import "SETOMasterKey.h"
 
-@interface SETOCryptorV3Tests : XCTestCase
+@interface SETOCryptorV5Tests : XCTestCase
 @property (nonatomic, strong) SETOCryptor *cryptor;
 @end
 
-@implementation SETOCryptorV3Tests
+@implementation SETOCryptorV5Tests
 
 - (void)setUp {
 	[super setUp];
-	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"3cKOp+YKt64=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"yAIFYioq0cac6mHDBczjfbjuhSfeEIHFtGpcoR7fQ6h/LlQERnQXzQ==\",\"hmacMasterKey\":\"eSBguTyeLjddkIlyy1gp5zLagKiUUUjxaxUGaX1IeDu1SWEpAPymqQ==\"}";
+	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30g=\",\"version\":5}";
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
 	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
 
 	NSError *error;
-	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:&error];
+	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:&error];
 	XCTAssertNotNil(self.cryptor);
 	XCTAssertNil(error);
 }
 
 #pragma mark - Authentication
+
+- (void)testMasterKeyVersionAuthentication {
+	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30a=\",\"version\":5}";
+	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
+
+	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
+	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+	NSError *error;
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:&error]);
+	XCTAssertEqual(error.domain, kSETOCryptorProviderErrorDomain);
+	XCTAssertEqual(error.code, SETOCryptorProviderUnauthenticKeyVersionError);
+}
 
 - (void)testFileAuthentication {
 	XCTestExpectation *authentication1Finished = [self expectationWithDescription:@"authentication of authentic file finished"];
@@ -41,7 +53,7 @@
 
 	// write authentic test data to file:
 	NSString *filePath1 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test1.aes"];
-	NSString *encryptedFileString1 = @"8lEJGixRMS3QxPS7+Lfx/n+gu1mbE+zYl4uhyqdmW9V6z7oT72epELVf/KEArykxqTnTxeVs6dl3fsmrrKIqyA4220SEl8bAmQuvZvFInL/gcSw8IvJctgprIZD4zcs+7J4zlvMmQ9Ye9/aa/ch4Bfzb13BnZyM8FKt9SgUMTLcR5CxDDRsu8VhuF5AwVwg1IoGMHA==";
+	NSString *encryptedFileString1 = @"2HrK7wEaE49Q52Y3b38CkcZpKV+8WQLDk+djHO+xUmu8XiHfD6XOwdO9iSsyvJnQTQsx9TRBZoQ16W32Bpu/6zXyDBMP0xaUwNtqWq8FWIhAqwCf2w+3oHd3E0AB2Qb/wn52zvGeb1sNZF3+1BWpTP9hsAzzqBr94QhlEt8BxOjc5sr+lu939sHil6c6w2i3kDaG";
 	NSData *encryptedFileData1 = [[NSData alloc] initWithBase64EncodedString:encryptedFileString1 options:0];
 	[encryptedFileData1 writeToFile:filePath1 atomically:YES];
 	[self.cryptor authenticateFileAtPath:filePath1 callback:^(NSError *error) {
@@ -57,7 +69,7 @@
 
 	// write unauthentic content test data to file:
 	NSString *filePath2 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test2.aes"];
-	NSString *encryptedFileString2 = @"8lEJGixRMS3QxPS7+Lfx/n+gu1mbE+zYl4uhyqdmW9V6z7oT72epELVf/KEArykxqTnTxeVs6dl3fsmrrKIqyA4220SEl8bAmQuvZvFInL/gcSw8IvJctgprIZD4zcs+7J4zlvMmQ9Ye9/aa/ch4Bfzb13BnZyM8FKt9SgUMTLcR5CxDDRsu8VhuF5AwVwg1IoGMHa==";
+	NSString *encryptedFileString2 = @"2HrK7wEaE49Q52Y3b38CkcZpKV+8WQLDk+djHO+xUmu8XiHfD6XOwdO9iSsyvJnQTQsx9TRBZoQ16W32Bpu/6zXyDBMP0xaUwNtqWq8FWIhAqwCftw+3oHd3E0AB2Qb/wn52zvGeb1sNZF3+1BWpTP9hsAzzqBr94QhlEt8BxOjc5sr+lu939sHil6c6w2i3kDaG";
 	NSData *encryptedFileData2 = [[NSData alloc] initWithBase64EncodedString:encryptedFileString2 options:0];
 	[encryptedFileData2 writeToFile:filePath2 atomically:YES];
 	[self.cryptor authenticateFileAtPath:filePath2 callback:^(NSError *error) {
@@ -73,7 +85,7 @@
 
 	// write unauthentic header test data to file:
 	NSString *filePath3 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test3.aes"];
-	NSString *encryptedFileString3 = @"7lEJGixRMS3QxPS7+Lfx/n+gu1mbE+zYl4uhyqdmW9V6z7oT72epELVf/KEArykxqTnTxeVs6dl3fsmrrKIqyA4220SEl8bAmQuvZvFInL/gcSw8IvJctgprIZD4zcs+7J4zlvMmQ9Ye9/aa/ch4Bfzb13BnZyM8FKt9SgUMTLcR5CxDDRsu8VhuF5AwVwg1IoGMHA==";
+	NSString *encryptedFileString3 = @"2HrK7wEaE49Q52Y3b38CkcZpKv+8WQLDk+djHO+xUmu8XiHfD6XOwdO9iSsyvJnQTQsx9TRBZoQ16W32Bpu/6zXyDBMP0xaUwNtqWq8FWIhAqwCf2w+3oHd3E0AB2Qb/wn52zvGeb1sNZF3+1BWpTP9hsAzzqBr94QhlEt8BxOjc5sr+lu939sHil6c6w2i3kDaG";
 	NSData *encryptedFileData3 = [[NSData alloc] initWithBase64EncodedString:encryptedFileString3 options:0];
 	[encryptedFileData3 writeToFile:filePath3 atomically:YES];
 	[self.cryptor authenticateFileAtPath:filePath3 callback:^(NSError *error) {
@@ -93,20 +105,20 @@
 #pragma mark - Encryption
 
 - (void)testDirectoryIdEncryption {
-	NSString *encryptedPath = [self.cryptor encryptDirectoryId:@"d77c2569-0b0b-41c1-9d6b-a3fb11933226"];
-	XCTAssertTrue([@"HH7I6B3ME5N3ZOHUCLIAGQID5NFYNXGH" isEqualToString:encryptedPath]);
+	NSString *encryptedPath = [self.cryptor encryptDirectoryId:@"e332c87c-70c6-4054-a256-543624585fd7"];
+	XCTAssertTrue([@"IQKGLSTJ52Z6LRKV2XYIUCF3PV2BDN66" isEqualToString:encryptedPath]);
 }
 
 #pragma mark - Decryption
 
 - (void)testMasterKeyDecryption {
-	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"3cKOp+YKt64=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"yAIFYioq0cac6mHDBczjfbjuhSfeEIHFtGpcoR7fQ6h/LlQERnQXzQ==\",\"hmacMasterKey\":\"eSBguTyeLjddkIlyy1gp5zLagKiUUUjxaxUGaX1IeDu1SWEpAPymqQ==\"}";
+	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30g=\",\"version\":5}";
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
 	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:nil]);
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" error:nil]);
+	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:nil]);
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwer" error:nil]);
 }
 
 - (void)testDecryption {
@@ -115,7 +127,7 @@
 	// write authentic test data to file:
 	NSString *fileInPath1 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test1.aes"];
 	NSString *fileOutPath1 = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test1.txt"];
-	NSString *encryptedFileString1 = @"8lEJGixRMS3QxPS7+Lfx/n+gu1mbE+zYl4uhyqdmW9V6z7oT72epELVf/KEArykxqTnTxeVs6dl3fsmrrKIqyA4220SEl8bAmQuvZvFInL/gcSw8IvJctgprIZD4zcs+7J4zlvMmQ9Ye9/aa/ch4Bfzb13BnZyM8FKt9SgUMTLcR5CxDDRsu8VhuF5AwVwg1IoGMHA==";
+	NSString *encryptedFileString1 = @"2HrK7wEaE49Q52Y3b38CkcZpKV+8WQLDk+djHO+xUmu8XiHfD6XOwdO9iSsyvJnQTQsx9TRBZoQ16W32Bpu/6zXyDBMP0xaUwNtqWq8FWIhAqwCf2w+3oHd3E0AB2Qb/wn52zvGeb1sNZF3+1BWpTP9hsAzzqBr94QhlEt8BxOjc5sr+lu939sHil6c6w2i3kDaG";
 	NSData *encryptedFileData1 = [[NSData alloc] initWithBase64EncodedString:encryptedFileString1 options:0];
 	[encryptedFileData1 writeToFile:fileInPath1 atomically:YES];
 	[self.cryptor decryptFileAtPath:fileInPath1 toPath:fileOutPath1 callback:^(NSError *error) {
@@ -123,7 +135,7 @@
 		
 		NSData *decrypted = [NSData dataWithContentsOfFile:fileOutPath1];
 		NSString *cleartext = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
-		XCTAssertTrue([@"setoLabs ftw" isEqualToString:cleartext]);
+		XCTAssertTrue([@"hello world" isEqualToString:cleartext]);
 		[[NSFileManager defaultManager] removeItemAtPath:fileInPath1 error:NULL];
 		[[NSFileManager defaultManager] removeItemAtPath:fileOutPath1 error:NULL];
 		
@@ -139,7 +151,7 @@
 - (void)testLargeFileDecryption {
 	XCTestExpectation *decryptionFinished = [self expectationWithDescription:@"decryption of file finished"];
 
-	NSString *largeCiphertextPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"ciphertext_v3" ofType:@"aes"];
+	NSString *largeCiphertextPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"ciphertext_v5" ofType:@"aes"];
 	NSString *fileOutPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"cleartext.jpg"];
 
 	[self.cryptor decryptFileAtPath:largeCiphertextPath toPath:fileOutPath callback:^(NSError *error) {
@@ -159,17 +171,17 @@
 }
 
 - (void)testFancyUnicodeFoldernameDecryption {
-	NSString *foo = @"YRDHTXQIW5VLBRHCBKDJJUQ5RQ3ZQY524DT3FYG6NVFSEYMYXMURYF2OMFSVQDAWNEML5XD7TMXYETWVSACXIQZF637LAJP7Q2NJU6Q=";
-	NSString *decrypted = [self.cryptor decryptFilename:foo insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
-	XCTAssertEqualObjects(decrypted, @"So oder so ähnlich könnte Ihr Ordner heißen");
+	NSString *foo = @"EWQR5HC36SSEBHEWL6LKDDWZSIAJQNY57SJRRNEZU2TMHYW3TKJROAVELZBDI3GBMY4IIZ3CUGZ2BGXLNPZXM5YY7AA5JDEI5XBQ====";
+	NSString *decrypted = [self.cryptor decryptFilename:foo insideDirectoryWithId:@"e332c87c-70c6-4054-a256-543624585fd7"];
+	XCTAssertEqualObjects(decrypted, @"So oder so ähnlich könnte Ihr Ordner heißen");
 }
 
 #pragma mark - Encryption & Decryption
 
 - (void)testEncryptionAndDecryptionOfPathComponents {
-	NSString *cleartextPathComponent = @"So oder so ähnlich könnte Ihr Ordner heißen";
-	NSString *ciphertextPathComponent = [self.cryptor encryptFilename:cleartextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
-	NSString *decrypted = [self.cryptor decryptFilename:ciphertextPathComponent insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
+	NSString *cleartextPathComponent = @"So oder so ähnlich könnte Ihr Ordner heißen";
+	NSString *ciphertextPathComponent = [self.cryptor encryptFilename:cleartextPathComponent insideDirectoryWithId:@"e332c87c-70c6-4054-a256-543624585fd7"];
+	NSString *decrypted = [self.cryptor decryptFilename:ciphertextPathComponent insideDirectoryWithId:@"e332c87c-70c6-4054-a256-543624585fd7"];
 	XCTAssertEqualObjects(cleartextPathComponent, decrypted);
 }
 
@@ -232,6 +244,45 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:0.5 handler:nil];
+}
+
+#pragma mark - Chunk Sizes
+
+- (void)testCleartextSize {
+	XCTAssertEqual(0, [SETOCryptorProvider cleartextSizeFromCiphertextSize:0 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:1 + 48 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 - 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 - 1 + 48 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 48 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(32 * 1024 + 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48 * 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 + 2, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 2 + 48 * 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024 - 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 - 1 + 48 * 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 + 48 * 2 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(64 * 1024 + 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 + 1 + 48 * 3 withCryptor:self.cryptor]);
+}
+
+- (void)testCleartextSizeWithInvalidCiphertextSize {
+	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:1 withCryptor:self.cryptor]);
+	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:48 withCryptor:self.cryptor]);
+	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48 withCryptor:self.cryptor]);
+	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 48 * 2 withCryptor:self.cryptor]);
+}
+
+- (void)testCiphertextSize {
+	XCTAssertEqual(0, [SETOCryptorProvider ciphertextSizeFromCleartextSize:0 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(1 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:1 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 - 1 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 - 1 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(32 * 1024 + 1 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 + 1 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 + 2 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 + 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024 - 1 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 - 1 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 withCryptor:self.cryptor]);
+
+	XCTAssertEqual(64 * 1024 + 1 + 48 * 3, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 + 1 withCryptor:self.cryptor]);
 }
 
 @end

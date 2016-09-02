@@ -14,7 +14,8 @@ extern NSString *const kSETOCryptorProviderErrorDomain;
 
 typedef NS_ENUM(NSInteger, SETOCryptorProviderError) {
 	SETOCryptorProviderUnsupportedVaultFormatError,
-	SETOCryptorProviderInvalidPasswordError
+	SETOCryptorProviderInvalidPasswordError,
+	SETOCryptorProviderUnauthenticKeyVersionError
 };
 
 /**
@@ -39,5 +40,25 @@ typedef NS_ENUM(NSInteger, SETOCryptorProviderError) {
  *  @return The newly-initialized cryptor.
  */
 + (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password error:(NSError **)error;
+
+/**
+ *  Calculates the size of the cleartext resulting from the given ciphertext decrypted with the given @c SETOCryptor object.
+ *
+ *  @param ciphertextSize Pure payload ciphertext. Not including the length of the header.
+ *  @param cryptor        The cryptor.
+ *
+ *  @return Cleartext length of a @p ciphertextSize sized ciphertext decrypted with @p cryptor.
+ */
++ (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize withCryptor:(SETOCryptor *)cryptor;
+
+/**
+ *  Calculates the size of the ciphertext resulting from the given cleartext encrypted with the given @c SETOCryptor object.
+ *
+ *  @param cleartextSize The cleartext size.
+ *  @param cryptor       The cryptor.
+ *
+ *  @return Ciphertext length of a @p cleartextSize sized cleartext encrypted with @p cryptor. Not including the length of the header.
+ */
++ (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize withCryptor:(SETOCryptor *)cryptor;
 
 @end

@@ -66,4 +66,16 @@ NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 	NSAssert(NO, @"Overwrite this method.");
 }
 
+#pragma mark - Chunk Sizes
+
+- (NSUInteger)cleartextChunkSize {
+	NSAssert(NO, @"Overwrite this method.");
+	return NSUIntegerMax;
+}
+
+- (NSUInteger)ciphertextChunkSize {
+	NSAssert(NO, @"Overwrite this method.");
+	return NSUIntegerMax;
+}
+
 @end

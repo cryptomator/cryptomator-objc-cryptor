@@ -130,4 +130,19 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 - (void)decryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback;
 
+/**------------------
+ *  @name Chunk Sizes
+ *-------------------
+ */
+
+/**
+ *  @return The number of cleartext bytes per chunk.
+ */
+- (NSUInteger)cleartextChunkSize;
+
+/**
+ *  @return The number of ciphertext bytes per chunk.
+ */
+- (NSUInteger)ciphertextChunkSize;
+
 @end

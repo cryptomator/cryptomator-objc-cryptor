@@ -1,12 +1,12 @@
 //
-//  SETOCryptorV3.m
+//  SETOCryptorV5.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Tobias Hagemann on 22/06/16.
+//  Created by Tobias Hagemann on 02/09/16.
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
-#import "SETOCryptorV3.h"
+#import "SETOCryptorV5.h"
 #import "SETOMasterKey.h"
 
 #import "NSString+SETOBase32Validation.h"
@@ -35,19 +35,19 @@
 
 #pragma mark -
 
-size_t const kSETOCryptorV3BlockSize = 16;
-int const kSETOCryptorV3KeyLength = 256;
-int const kSETOCryptorV3NonceLength = 16;
-int const kSETOCryptorV3HeaderLength = 88;
-int const kSETOCryptorV3HeaderPayloadLength = 40;
-int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
+size_t const kSETOCryptorV5BlockSize = 16;
+int const kSETOCryptorV5KeyLength = 256;
+int const kSETOCryptorV5NonceLength = 16;
+int const kSETOCryptorV5HeaderLength = 88;
+int const kSETOCryptorV5HeaderPayloadLength = 40;
+int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 
-@interface SETOCryptorV3 ()
+@interface SETOCryptorV5 ()
 @property (nonatomic, copy) NSData *primaryMasterKey;
 @property (nonatomic, copy) NSData *macMasterKey;
 @end
 
-@implementation SETOCryptorV3
+@implementation SETOCryptorV5
 
 #pragma mark - Initialization
 
@@ -68,7 +68,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	NSData *scryptSalt = [NSData dataWithBytes:scryptSaltBuffer length:sizeof(scryptSaltBuffer)];
 	uint64_t costParam = 16384;
 	uint32_t blockSize = 8;
-	unsigned char kekBytes[kSETOCryptorV3KeyLength / 8];
+	unsigned char kekBytes[kSETOCryptorV5KeyLength / 8];
 	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
 
 	// key wrapping:
@@ -76,10 +76,10 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	EVP_CIPHER_CTX ctx;
 	EVP_CIPHER_CTX_init(&ctx);
 	EVP_EncryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV5KeyLength / 8 + 8];
 	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, self.primaryMasterKey.bytes, (unsigned int)self.primaryMasterKey.length);
 	NSData *wrappedPrimaryMasterKey = [NSData dataWithBytes:wrappedPrimaryMasterKeyBuffer length:sizeof(wrappedPrimaryMasterKeyBuffer)];
-	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV5KeyLength / 8 + 8];
 	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, self.macMasterKey.bytes, (unsigned int)self.macMasterKey.length);
 	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
 	EVP_CIPHER_CTX_cleanup(&ctx);
@@ -187,7 +187,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	[input open];
 
 	// read file header:
-	unsigned char header[kSETOCryptorV3HeaderLength];
+	unsigned char header[kSETOCryptorV5HeaderLength];
 	int inputLength = (int)[input read:header maxLength:sizeof(header)];
 	if (inputLength != sizeof(header)) {
 		[input close];
@@ -209,7 +209,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	// calculate macs over file chunks:
 	BOOL chunkMacsEqual = YES;
 	uint64_t chunkNumber = 0;
-	int ciphertextChunkLength = kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
+	int ciphertextChunkLength = kSETOCryptorV5NonceLength + kSETOCryptorV5ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
 	NSMutableData *ciphertextChunk = [NSMutableData dataWithLength:ciphertextChunkLength];
 	while (input.hasBytesAvailable) {
 		// read chunk:
@@ -217,7 +217,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		int inputLength = (int)[input read:ciphertextChunkBuffer maxLength:ciphertextChunkLength];
 		if (inputLength == 0) {
 			continue;
-		} else if (inputLength < kSETOCryptorV3NonceLength + CC_SHA256_DIGEST_LENGTH) {
+		} else if (inputLength < kSETOCryptorV5NonceLength + CC_SHA256_DIGEST_LENGTH) {
 			[input close];
 			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorAuthenticationFailedError userInfo:nil]);
 			return;
@@ -228,8 +228,8 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		unsigned char calculatedMac[CC_SHA256_DIGEST_LENGTH];
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		unsigned char *nonce = &ciphertextChunkBuffer[0];
-		unsigned char *payload = &ciphertextChunkBuffer[kSETOCryptorV3NonceLength];
-		int payloadLength = inputLength - kSETOCryptorV3NonceLength - CC_SHA256_DIGEST_LENGTH;
+		unsigned char *payload = &ciphertextChunkBuffer[kSETOCryptorV5NonceLength];
+		int payloadLength = inputLength - kSETOCryptorV5NonceLength - CC_SHA256_DIGEST_LENGTH;
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 
 		// calculate chunk mac:
@@ -237,7 +237,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
 		CCHmacUpdate(&chunkHmacContext, iv, 16);
 		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
-		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptorV3NonceLength);
+		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptorV5NonceLength);
 		CCHmacUpdate(&chunkHmacContext, payload, payloadLength);
 		CCHmacFinal(&chunkHmacContext, calculatedMac);
 
@@ -278,19 +278,14 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	}
 	uint64_t fileSize = [fileAttributes fileSize];
 
-	// determine length of random padding:
-	uint32_t maxPaddingLength = (uint32_t)MIN(MAX(fileSize / 10, 4096), 16 * 1024 * 1024);
-	uint32_t randomPaddingLength = arc4random_uniform(maxPaddingLength);
-
 	// init progress:
-	uint64_t bytesTotal = fileSize + randomPaddingLength; // include random padding
 	uint64_t bytesProcessed = 0;
 	if (progressCallback) {
 		progressCallback(0.0);
 	}
 
 	// allocate file header buffer:
-	unsigned char header[kSETOCryptorV3HeaderLength];
+	unsigned char header[kSETOCryptorV5HeaderLength];
 
 	// create random iv:
 	if (SecRandomCopyBytes(kSecRandomDefault, 16, header) == -1) {
@@ -308,8 +303,8 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	}
 
 	// encrypt header data:
-	unsigned char cleartextHeaderPayload[kSETOCryptorV3HeaderPayloadLength];
-	long_to_big_endian_bytes(fileSize, cleartextHeaderPayload);
+	unsigned char cleartextHeaderPayload[kSETOCryptorV5HeaderPayloadLength];
+	fill_bytes(cleartextHeaderPayload, 0xFF, 0, 8);
 	memcpy(&cleartextHeaderPayload[8], fileKey, sizeof(fileKey));
 	{
 		const EVP_CIPHER *ctrCipher = EVP_aes_256_ctr();
@@ -318,8 +313,8 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
 		int bytesEncrypted = 0;
-		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, cleartextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
-		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptorV3HeaderPayloadLength) {
+		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, cleartextHeaderPayload, kSETOCryptorV5HeaderPayloadLength);
+		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptorV5HeaderPayloadLength) {
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
 			return;
@@ -350,9 +345,9 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	EVP_CIPHER_CTX_init(&ctx);
 	EVP_CIPHER_CTX_set_padding(&ctx, 0);
 	uint64_t chunkNumber = 0;
-	while (input.hasBytesAvailable && bytesProcessed < bytesTotal) {
+	while (input.hasBytesAvailable) {
 		// read chunk:
-		int cleartextChunkLength = kSETOCryptorV3ChunkPayloadLength;
+		int cleartextChunkLength = kSETOCryptorV5ChunkPayloadLength;
 		unsigned char cleartextChunk[cleartextChunkLength];
 		int inputLength = (int)[input read:cleartextChunk maxLength:cleartextChunkLength];
 		if (inputLength == 0) {
@@ -365,16 +360,12 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 			return;
 		}
 
-		// add padding if necessary:
-		uint64_t bytesRemaining = bytesTotal - bytesProcessed;
-		int payloadLength = (int)MIN(bytesRemaining, kSETOCryptorV3ChunkPayloadLength);
-		int paddingLength = payloadLength - inputLength;
-		arc4random_buf(&cleartextChunk[inputLength], paddingLength);
-		inputLength += paddingLength;
+		// calculate payload length:
+		int payloadLength = (int)MIN(fileSize - bytesProcessed, kSETOCryptorV5ChunkPayloadLength);
 
 		// init encryption:
-		int ciphertextChunkLength = kSETOCryptorV3NonceLength + payloadLength + CC_SHA256_DIGEST_LENGTH;
-		unsigned char ciphertextChunk[ciphertextChunkLength + kSETOCryptorV3BlockSize];
+		int ciphertextChunkLength = kSETOCryptorV5NonceLength + payloadLength + CC_SHA256_DIGEST_LENGTH;
+		unsigned char ciphertextChunk[ciphertextChunkLength + kSETOCryptorV5BlockSize];
 		unsigned char *nonce = &ciphertextChunk[0];
 		if (SecRandomCopyBytes(kSecRandomDefault, 16, nonce) == -1) {
 			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorEncryptionFailedError userInfo:nil]);
@@ -395,7 +386,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		}
 
 		// authenticate ciphertext chunk:
-		unsigned char *chunkMac = &ciphertextChunk[kSETOCryptorV3NonceLength + bytesEncrypted];
+		unsigned char *chunkMac = &ciphertextChunk[kSETOCryptorV5NonceLength + bytesEncrypted];
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 		CCHmacContext chunkHmacContext;
@@ -420,7 +411,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		bytesProcessed += payloadLength;
 		chunkNumber++;
 		if (progressCallback) {
-			progressCallback((CGFloat)bytesProcessed / bytesTotal);
+			progressCallback((CGFloat)bytesProcessed / fileSize);
 		}
 	}
 	EVP_CIPHER_CTX_cleanup(&ctx);
@@ -439,13 +430,22 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	NSParameterAssert(outPath);
 	NSParameterAssert(callback);
 
+	// read ciphertext file size:
+	NSError *filesAttributesError;
+	NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:inPath error:&filesAttributesError];
+	if (filesAttributesError) {
+		callback(filesAttributesError);
+		return;
+	}
+	uint64_t fileSize = [fileAttributes fileSize];
+
 	// open ciphertext input stream:
 	NSInputStream *input = [NSInputStream inputStreamWithFileAtPath:inPath];
 	[input scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 	[input open];
 
 	// read file header:
-	unsigned char header[kSETOCryptorV3HeaderLength];
+	unsigned char header[kSETOCryptorV5HeaderLength];
 	int inputLength = (int)[input read:header maxLength:sizeof(header)];
 	if (inputLength != sizeof(header)) {
 		[input close];
@@ -458,7 +458,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	unsigned char *ciphertextHeaderPayload = &header[16];
 
 	// decrypt header data:
-	unsigned char cleartextHeaderPayload[kSETOCryptorV3HeaderPayloadLength + kSETOCryptorV3BlockSize];
+	unsigned char cleartextHeaderPayload[kSETOCryptorV5HeaderPayloadLength + kSETOCryptorV5BlockSize];
 	{
 		const EVP_CIPHER *ctrCipher = EVP_aes_256_ctr();
 		EVP_CIPHER_CTX ctx;
@@ -466,8 +466,8 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
 		int bytesDecrypted = 0;
-		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
-		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptorV3HeaderPayloadLength) {
+		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptorV5HeaderPayloadLength);
+		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptorV5HeaderPayloadLength) {
 			[input close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorCorruptedFileHeaderError userInfo:nil]);
@@ -476,8 +476,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		EVP_CIPHER_CTX_cleanup(&ctx);
 	}
 
-	// extract file size and file key:
-	uint64_t fileSize = big_endian_bytes_to_long(&cleartextHeaderPayload[0]);
+	// extract file key:
 	unsigned char *fileKey = &cleartextHeaderPayload[8];
 
 	// initialize bytes processed:
@@ -496,14 +495,14 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	EVP_CIPHER_CTX ctx;
 	EVP_CIPHER_CTX_init(&ctx);
 	EVP_CIPHER_CTX_set_padding(&ctx, 0);
-	while (input.hasBytesAvailable && bytesProcessed < fileSize) {
+	while (input.hasBytesAvailable) {
 		// read chunk:
-		int ciphertextChunkLength = kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
+		int ciphertextChunkLength = kSETOCryptorV5NonceLength + kSETOCryptorV5ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
 		unsigned char ciphertextChunk[ciphertextChunkLength];
 		int inputLength = (int)[input read:ciphertextChunk maxLength:ciphertextChunkLength];
 		if (inputLength == 0) {
 			continue;
-		} else if (inputLength < kSETOCryptorV3NonceLength + CC_SHA256_DIGEST_LENGTH) {
+		} else if (inputLength < kSETOCryptorV5NonceLength + CC_SHA256_DIGEST_LENGTH) {
 			[input close];
 			[output close];
 			EVP_CIPHER_CTX_cleanup(&ctx);
@@ -513,19 +512,17 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 		// init decryption:
 		unsigned char *nonce = &ciphertextChunk[0];
-		unsigned char *payload = &ciphertextChunk[kSETOCryptorV3NonceLength];
+		unsigned char *payload = &ciphertextChunk[kSETOCryptorV5NonceLength];
 		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, fileKey, nonce);
 
 		// calculate payload length:
-		int payloadLength = inputLength - kSETOCryptorV3NonceLength - CC_SHA256_DIGEST_LENGTH;
-		uint64_t remainingFileSize = fileSize - bytesProcessed;
-		int remainingPayloadLength = payloadLength < remainingFileSize ? payloadLength : (int)remainingFileSize; // ignore padding if necessary
+		int payloadLength = inputLength - kSETOCryptorV5NonceLength - CC_SHA256_DIGEST_LENGTH;
 
 		// decrypt chunk:
-		int cleartextChunkLength = payloadLength + kSETOCryptorV3BlockSize;
+		int cleartextChunkLength = payloadLength + kSETOCryptorV5BlockSize;
 		unsigned char cleartextChunk[cleartextChunkLength];
 		int outputLength = 0;
-		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextChunk, &outputLength, payload, remainingPayloadLength);
+		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextChunk, &outputLength, payload, payloadLength);
 		if (decryptStatus == 0) {
 			[input close];
 			[output close];
@@ -564,11 +561,11 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 #pragma mark - Chunk Sizes
 
 - (NSUInteger)cleartextChunkSize {
-	return kSETOCryptorV3ChunkPayloadLength;
+	return kSETOCryptorV5ChunkPayloadLength;
 }
 
 - (NSUInteger)ciphertextChunkSize {
-	return kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
+	return kSETOCryptorV5NonceLength + kSETOCryptorV5ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
 }
 
 @end

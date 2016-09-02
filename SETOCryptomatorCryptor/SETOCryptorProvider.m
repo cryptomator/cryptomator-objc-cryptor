@@ -8,16 +8,29 @@
 
 #import "SETOCryptorProvider.h"
 #import "SETOCryptorV3.h"
+#import "SETOCryptorV5.h"
 #import "SETOMasterKey.h"
 
+#import "SETOCryptoSupport.h"
+
+#import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonHMAC.h>
 #import <openssl/evp.h>
 #import "e_aeswrap.h"
 #import "crypto_scrypt.h"
 
 NSString *const kSETOCryptorProviderErrorDomain = @"SETOCryptorProviderErrorDomain";
 
-NSUInteger kSETOCryptorProviderCurrentVersion = 4;
 int const kSETOCryptorProviderKeyLength = 256;
+
+typedef NS_ENUM(NSInteger, SETOCryptorSupportedVersion) {
+	SETOCryptorVersion3 = 3,
+	SETOCryptorVersion4 = 4,
+	SETOCryptorVersion5 = 5
+};
+
+NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion5;
+NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
 
 @implementation SETOCryptorProvider
 
@@ -45,7 +58,7 @@ int const kSETOCryptorProviderKeyLength = 256;
 	NSData *macMasterKey = [NSData dataWithBytes:macMasterKeyBuffer length:sizeof(macMasterKeyBuffer)];
 
 	// done:
-	return [SETOCryptorProvider cryptorWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey forVersion:kSETOCryptorProviderCurrentVersion];
+	return [SETOCryptorProvider cryptorWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey forVersion:kSETOCryptorCurrentVersion];
 }
 
 + (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password error:(NSError **)error {
@@ -96,6 +109,22 @@ int const kSETOCryptorProviderKeyLength = 256;
 	NSData *primaryMasterKey = [NSData dataWithBytes:unwrappedPrimaryMasterKeyBuffer length:unwrappedPrimaryMasterKeyLength];
 	NSData *macMasterKey = [NSData dataWithBytes:unwrappedMacMasterKeyBuffer length:unwrappedMacMasterKeyLength];
 
+	BOOL versionMacsEqual = YES;
+	if (masterKey.version >= SETOCryptorVersion5) {
+		// calculate mac over version:
+		unsigned char *version;
+		int_to_big_endian_bytes(masterKey.version, version);
+		unsigned char calculatedVersionMac[CC_SHA256_DIGEST_LENGTH];
+		CCHmacContext versionHmacContext;
+		CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, unwrappedMacMasterKeyBuffer, unwrappedMacMasterKeyLength);
+		CCHmacUpdate(&versionHmacContext, version, sizeof(int32_t));
+		CCHmacFinal(&versionHmacContext, calculatedVersionMac);
+
+		// constant time comparison of version mac:
+		unsigned char *expectedVersionMac = (unsigned char *)masterKey.versionMac.bytes;
+		versionMacsEqual = compare_bytes(calculatedVersionMac, expectedVersionMac, CC_SHA256_DIGEST_LENGTH);
+	}
+
 	// clean up:
 	for (int i = 0; i < unwrappedPrimaryMasterKeyLength; i++) {
 		unwrappedPrimaryMasterKeyBuffer[i] = 0;
@@ -105,23 +134,64 @@ int const kSETOCryptorProviderKeyLength = 256;
 	}
 
 	// done:
-	return [SETOCryptorProvider cryptorWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey forVersion:masterKey.version];
+	if (versionMacsEqual) {
+		return [SETOCryptorProvider cryptorWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey forVersion:masterKey.version];
+	} else {
+		if (error) {
+			*error = [NSError errorWithDomain:kSETOCryptorProviderErrorDomain code:SETOCryptorProviderUnauthenticKeyVersionError userInfo:nil];
+		}
+		return nil;
+	}
+}
+
++ (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize withCryptor:(SETOCryptor *)cryptor {
+	if (cryptor.version < SETOCryptorVersion5) {
+		NSLog(@"+[SETOCryptorProvider cleartextSizeFromCiphertextSize:withCryptor:] not defined for cryptor version %zd", cryptor.version);
+		return NSUIntegerMax;
+	}
+	NSUInteger cleartextChunkSize = cryptor.cleartextChunkSize;
+	NSUInteger ciphertextChunkSize = cryptor.ciphertextChunkSize;
+	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
+	NSUInteger numFullChunks = ciphertextSize / ciphertextChunkSize; // floor by int-truncation
+	NSUInteger additionalCiphertextBytes = ciphertextSize % ciphertextChunkSize;
+	if (additionalCiphertextBytes > 0 && additionalCiphertextBytes <= overheadPerChunk) {
+		NSLog(@"+[SETOCryptorProvider cleartextSizeFromCiphertextSize:withCryptor:] not defined for input value %tu", ciphertextSize);
+		return NSUIntegerMax;
+	}
+	NSUInteger additionalCleartextBytes = (additionalCiphertextBytes == 0) ? 0 : additionalCiphertextBytes - overheadPerChunk;
+	return cleartextChunkSize * numFullChunks + additionalCleartextBytes;
+}
+
++ (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize withCryptor:(SETOCryptor *)cryptor {
+	if (cryptor.version < SETOCryptorVersion5) {
+		NSLog(@"+[SETOCryptorProvider cleartextSizeFromCiphertextSize:withCryptor:] not defined for cryptor version %zd", cryptor.version);
+		return NSUIntegerMax;
+	}
+	NSUInteger cleartextChunkSize = cryptor.cleartextChunkSize;
+	NSUInteger ciphertextChunkSize = cryptor.ciphertextChunkSize;
+	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
+	NSUInteger numFullChunks = cleartextSize / cleartextChunkSize; // floor by int-truncation
+	NSUInteger additionalCleartextBytes = cleartextSize % cleartextChunkSize;
+	NSUInteger additionalCiphertextBytes = (additionalCleartextBytes == 0) ? 0 : additionalCleartextBytes + overheadPerChunk;
+	return ciphertextChunkSize * numFullChunks + additionalCiphertextBytes;
 }
 
 #pragma mark - Convenience
 
-+ (SETOCryptor *)cryptorWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey forVersion:(NSUInteger)version {
++ (SETOCryptor *)cryptorWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey forVersion:(SETOCryptorSupportedVersion)version {
 	switch (version) {
-		case 3:
-		case 4:
+		case SETOCryptorVersion3:
+		case SETOCryptorVersion4:
 			return [[SETOCryptorV3 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
+		case SETOCryptorVersion5:
+			return [[SETOCryptorV5 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 		default:
 			return nil;
 	}
 }
 
-+ (BOOL)supportsVersion:(NSUInteger)version {
-	return version >= 3 && version <= 4;
++ (BOOL)supportsVersion:(NSInteger)version {
+	return version >= kSETOCryptorMinimumSupportedVersion && version <= kSETOCryptorCurrentVersion;
 }
 
 @end

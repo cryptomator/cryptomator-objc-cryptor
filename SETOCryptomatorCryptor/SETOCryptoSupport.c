@@ -32,6 +32,20 @@ void long_to_big_endian_bytes(uint64_t lng, unsigned char *bytes) {
 	bytes[7] = 0xFF & lng;
 }
 
-int areBytesEqual(uint8_t x, uint8_t y) {
+void fill_bytes(unsigned char *bytes, unsigned char byte, int offset, int len) {
+	for (int i = offset; i < len; i++) {
+		bytes[i] = byte;
+	}
+}
+
+int are_bytes_equal(uint8_t x, uint8_t y) {
 	return 1 ^ (((x - y) | (y - x)) >> 7);
+}
+
+int compare_bytes(unsigned char *bytes1, unsigned char *bytes2, int len) {
+	int equal = 1;
+	for (int i = 0; i < len; i++) {
+		equal &= are_bytes_equal(bytes1[i], bytes2[i]);
+	}
+	return equal;
 }

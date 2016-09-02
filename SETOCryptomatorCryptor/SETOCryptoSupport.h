@@ -14,6 +14,7 @@
 void int_to_big_endian_bytes(uint32_t num, unsigned char *bytes);
 uint64_t big_endian_bytes_to_long(const unsigned char *bytes);
 void long_to_big_endian_bytes(uint64_t lng, unsigned char *bytes);
-int areBytesEqual(uint8_t x, uint8_t y);
+void fill_bytes(unsigned char *bytes, unsigned char byte, int offset, int len);
+int compare_bytes(unsigned char *bytes1, unsigned char *bytes2, int len);
 
 #endif /* defined(__SETOCryptomatorCryptor__SETOCryptoSupport__) */
