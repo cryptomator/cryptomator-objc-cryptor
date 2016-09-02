@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/cocoapods/p/SETOCryptomatorCryptor.svg?style=flat)](http://cocoadocs.org/docsets/SETOCryptomatorCryptor)
 [![Twitter](https://img.shields.io/badge/twitter-@Cryptomator-blue.svg?style=flat)](http://twitter.com/Cryptomator)
 
-SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults. For more information on the security details visit [cryptomator.org](https://cryptomator.org/architecture/).
+SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults. For more information on the security details visit [cryptomator.org](https://cryptomator.org/architecture/).
 
 ## Requirements
 
@@ -15,7 +15,7 @@ SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults. 
 
 The easiest way to use SETOCryptomatorCryptor in your app is via [CocoaPods](http://cocoapods.org/ "CocoaPods").
 
-1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.1.0'`
+1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.2.0'`
 2. Run the command `pod install` from the Podfile folder directory.
 
 ## Usage
@@ -58,6 +58,17 @@ if (error) {
 } else {
   NSLog(@"Unlock Success");
 }
+```
+
+#### Determine File Sizes
+
+Beginning with vault version 5, you can determine the cleartext and ciphertext sizes in O(1). Reading out the file sizes before vault version 5 is theoretically possible, but not supported by this library.
+
+```objective-c
+SETOCryptor *cryptor = ...;
+NSUInteger ciphertextSize = ...;
+NSUInteger cleartextSize = [SETOCryptorProvider cleartextSizeFromCiphertextSize:ciphertextSize withCryptor:cryptor];
+// and the other way round with +[SETOCryptorProvider ciphertextSizeFromCleartextSize:withCryptor:]
 ```
 
 ### SETOCryptor

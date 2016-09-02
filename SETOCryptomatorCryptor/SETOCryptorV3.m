@@ -53,7 +53,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 - (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
 	if ([NSThread isMainThread]) {
-		NSLog(@"Warning: This method should be called from a background thread, as random number generation will benefit from UI interaction.");
+		NSLog(@"Warning: -[SETOCryptor masterKeyWithPassword:] should be called from a background thread, as random number generation will benefit from UI interaction.");
 	}
 
 	// create random bytes for scrypt salt:

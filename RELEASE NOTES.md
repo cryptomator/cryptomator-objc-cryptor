@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.2.1
+
+- Exposed `SETOCryptorVersion` as a public enum.
+
 ## Version 1.2.0
 
 We've decided to disable file size obfuscation. File sizes can be determined in O(1) instead of having to read and decrypt the file header. This allows showing file sizes in the directory listing without having to download each file first.

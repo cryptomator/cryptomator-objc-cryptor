@@ -21,16 +21,10 @@
 
 NSString *const kSETOCryptorProviderErrorDomain = @"SETOCryptorProviderErrorDomain";
 
-int const kSETOCryptorProviderKeyLength = 256;
-
-typedef NS_ENUM(NSInteger, SETOCryptorSupportedVersion) {
-	SETOCryptorVersion3 = 3,
-	SETOCryptorVersion4 = 4,
-	SETOCryptorVersion5 = 5
-};
-
 NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion5;
 NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
+
+int const kSETOCryptorProviderKeyLength = 256;
 
 @implementation SETOCryptorProvider
 
@@ -178,7 +172,7 @@ NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
 
 #pragma mark - Convenience
 
-+ (SETOCryptor *)cryptorWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey forVersion:(SETOCryptorSupportedVersion)version {
++ (SETOCryptor *)cryptorWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey forVersion:(SETOCryptorVersion)version {
 	switch (version) {
 		case SETOCryptorVersion3:
 		case SETOCryptorVersion4:
@@ -190,7 +184,7 @@ NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
 	}
 }
 
-+ (BOOL)supportsVersion:(NSInteger)version {
++ (BOOL)supportsVersion:(SETOCryptorVersion)version {
 	return version >= kSETOCryptorMinimumSupportedVersion && version <= kSETOCryptorCurrentVersion;
 }
 

@@ -18,6 +18,12 @@ typedef NS_ENUM(NSInteger, SETOCryptorError) {
 	SETOCryptorDecryptionFailedError
 };
 
+typedef NS_ENUM(NSInteger, SETOCryptorVersion) {
+	SETOCryptorVersion3 = 3,
+	SETOCryptorVersion4 = 4,
+	SETOCryptorVersion5 = 5
+};
+
 typedef void (^SETOCryptorCompletionCallback)(NSError *error);
 typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
 
@@ -28,7 +34,7 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 @interface SETOCryptor : NSObject
 
-@property (nonatomic, readonly) NSInteger version;
+@property (nonatomic, readonly) SETOCryptorVersion version;
 
 /**---------------------
  *  @name Initialization
@@ -44,7 +50,7 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  *
  *  @return The newly-initialized cryptor.
  */
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(NSInteger)version NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version NS_DESIGNATED_INITIALIZER;
 
 /**
  *  Unavailable initialization method, use -initWithPrimaryMasterKey:macMasterKey: instead.

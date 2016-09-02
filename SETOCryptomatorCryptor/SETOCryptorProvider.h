@@ -18,6 +18,9 @@ typedef NS_ENUM(NSInteger, SETOCryptorProviderError) {
 	SETOCryptorProviderUnauthenticKeyVersionError
 };
 
+extern NSInteger const kSETOCryptorCurrentVersion;
+extern NSInteger const kSETOCryptorMinimumSupportedVersion;
+
 /**
  *  @c SETOCryptorProvider is a factory for @c SETOCryptor objects.
  */

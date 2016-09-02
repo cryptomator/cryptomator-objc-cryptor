@@ -14,14 +14,14 @@ NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 @interface SETOCryptor ()
 @property (nonatomic, copy) NSData *primaryMasterKey;
 @property (nonatomic, copy) NSData *macMasterKey;
-@property (nonatomic, assign) NSInteger version;
+@property (nonatomic, assign) SETOCryptorVersion version;
 @end
 
 @implementation SETOCryptor
 
 #pragma mark - Initialization
 
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(NSInteger)version {
+- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version {
 	if (self = [super init]) {
 		self.primaryMasterKey = primaryMasterKey;
 		self.macMasterKey = macMasterKey;

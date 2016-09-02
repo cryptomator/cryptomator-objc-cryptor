@@ -37,6 +37,6 @@
  *
  *  @see -initWithCryptor:queue:
  */
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(NSInteger)version NS_UNAVAILABLE;
+- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version NS_UNAVAILABLE;
 
 @end
