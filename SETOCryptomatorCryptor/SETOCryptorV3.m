@@ -90,7 +90,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	int_to_big_endian_bytes((uint32_t)self.version, versionBytes);
 	CCHmacContext versionHmacContext;
 	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, (size_t)self.macMasterKey.length);
-	CCHmacUpdate(&versionHmacContext, versionBytes, 0);
+	CCHmacUpdate(&versionHmacContext, versionBytes, sizeof(versionBytes));
 	CCHmacFinal(&versionHmacContext, &versionMac);
 
 	// master key assembly:

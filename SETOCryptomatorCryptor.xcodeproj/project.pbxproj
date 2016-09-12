@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		742F0F931D79E028002E261F /* ciphertext_v5.aes in Resources */ = {isa = PBXBuildFile; fileRef = 742F0F921D79E005002E261F /* ciphertext_v5.aes */; };
 		742F0F941D79E02A002E261F /* ciphertext_v3.aes in Resources */ = {isa = PBXBuildFile; fileRef = 742F0F911D79E005002E261F /* ciphertext_v3.aes */; };
+		74345BF41D86D666003B96C5 /* SETOCryptorProviderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */; };
 		747C755F1D79C950002EAD3B /* SETOCryptorV5.h in Headers */ = {isa = PBXBuildFile; fileRef = 747C755D1D79C950002EAD3B /* SETOCryptorV5.h */; };
 		747C75601D79C950002EAD3B /* SETOCryptorV5.m in Sources */ = {isa = PBXBuildFile; fileRef = 747C755E1D79C950002EAD3B /* SETOCryptorV5.m */; };
 		747C75621D79D33A002EAD3B /* SETOCryptorV5Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */; };
@@ -56,6 +57,7 @@
 /* Begin PBXFileReference section */
 		742F0F911D79E005002E261F /* ciphertext_v3.aes */ = {isa = PBXFileReference; lastKnownFileType = file; path = ciphertext_v3.aes; sourceTree = "<group>"; };
 		742F0F921D79E005002E261F /* ciphertext_v5.aes */ = {isa = PBXFileReference; lastKnownFileType = file; path = ciphertext_v5.aes; sourceTree = "<group>"; };
+		74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorProviderTests.m; sourceTree = "<group>"; };
 		747C755D1D79C950002EAD3B /* SETOCryptorV5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV5.h; sourceTree = "<group>"; };
 		747C755E1D79C950002EAD3B /* SETOCryptorV5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV5.m; sourceTree = "<group>"; };
 		747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV5Tests.m; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */,
+				74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */,
 				74CBDF861C58342F0055121F /* SETOCryptorV3Tests.m */,
 				747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */,
 				74E618541C69131D0062027B /* Resources */,
@@ -451,6 +454,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				747C75621D79D33A002EAD3B /* SETOCryptorV5Tests.m in Sources */,
+				74345BF41D86D666003B96C5 /* SETOCryptorProviderTests.m in Sources */,
 				74CBDFBB1C58350C0055121F /* SETOAesSivCipherUtilTests.m in Sources */,
 				74CBDF871C58342F0055121F /* SETOCryptorV3Tests.m in Sources */,
 			);

@@ -34,7 +34,7 @@
 
 #pragma mark - Authentication
 
-- (void)testMasterKeyVersionAuthentication {
+- (void)testUnauthenticMasterKeyVersion {
 	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30a=\",\"version\":5}";
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 

@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.2.3
+
+- Fixed version MAC calculation.
+
 ## Version 1.2.2
 
 - Fixed crash in `SETOAsyncCryptor`, `cleartextChunkSize` and `ciphertextChunkSize` methods are now decorated.

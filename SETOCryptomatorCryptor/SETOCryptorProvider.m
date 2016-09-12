@@ -106,7 +106,7 @@ int const kSETOCryptorProviderKeyLength = 256;
 	BOOL versionMacsEqual = YES;
 	if (masterKey.version >= SETOCryptorVersion5) {
 		// calculate mac over version:
-		unsigned char *version;
+		unsigned char version[sizeof(uint32_t)] = {0};
 		int_to_big_endian_bytes(masterKey.version, version);
 		unsigned char calculatedVersionMac[CC_SHA256_DIGEST_LENGTH];
 		CCHmacContext versionHmacContext;
