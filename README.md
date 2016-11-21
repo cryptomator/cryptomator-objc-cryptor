@@ -163,4 +163,4 @@ Help us keep Cryptomator open and inclusive. Please read and follow our [Code of
 
 ## License
 
-Distributed under the MIT license. See the LICENSE file for more info.
+Distributed under the AGPLv3. See the LICENSE file for more info.

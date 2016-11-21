@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name     = 'SETOCryptomatorCryptor'
   s.version  = '1.2.3'
-  s.license  = 'MIT'
-  s.summary  = 'SETOCryptomatorCryptor is an iOS crypto framework to access Cryptomator vaults.'
+  s.license  = 'AGPLv3'
+  s.summary  = 'SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults.'
   s.homepage = 'https://github.com/cryptomator/cryptomator-objc-cryptor'
   s.social_media_url = 'https://twitter.com/Cryptomator'
   s.authors  = { 'Tobias Hagemann'   => 'tobias.hagemann@setolabs.com',
