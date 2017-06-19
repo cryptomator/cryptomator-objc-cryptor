@@ -6,9 +6,8 @@
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
-#import "SETOCryptorV5.h"
+#import "SETOCryptor.h"
 #import "SETOCryptorProvider.h"
 #import "SETOMasterKey.h"
 
@@ -30,6 +29,33 @@
 	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:&error];
 	XCTAssertNotNil(self.cryptor);
 	XCTAssertNil(error);
+}
+
+- (void)testDifferentNormalizationFormsOfPassword {
+	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"xjkJmSgJ/zU=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"3BvylqppBfNQ+ZJNS+wRbSKutuHT3AGGIY3IT0yMzpSSBfS+pr6WIw==\",\"hmacMasterKey\":\"pienjdRNu5PY4ZY8sM/CwGMZGVZ4YmO4MjXwSYYEaiy13/Qm0NoAcA==\",\"versionMac\":\"8ArW2fJ4Tdi0NjqNPw+QngU3YLX009G7ZplJi+7kQxo=\",\"version\":5}";
+	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
+
+	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
+	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+
+	NSError *error1;
+	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error1]); // NFC + NFD
+	XCTAssertNil(error1);
+
+	NSError *error2;
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error2]); // NFC + NFC
+	XCTAssertEqual(error2.domain, kSETOCryptorProviderErrorDomain);
+	XCTAssertEqual(error2.code, SETOCryptorProviderInvalidPasswordError);
+
+	NSError *error3;
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error3]); // NFD + NFD
+	XCTAssertEqual(error3.domain, kSETOCryptorProviderErrorDomain);
+	XCTAssertEqual(error3.code, SETOCryptorProviderInvalidPasswordError);
+
+	NSError *error4;
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error4]); // NFD + NFC
+	XCTAssertEqual(error4.domain, kSETOCryptorProviderErrorDomain);
+	XCTAssertEqual(error4.code, SETOCryptorProviderInvalidPasswordError);
 }
 
 #pragma mark - Authentication

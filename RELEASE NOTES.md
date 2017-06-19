@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 1.3.0
+
+Unicode is hard. The password is now normalized in NFC.
+
+- Added vault version 6 compatibility.
+
 ## Version 1.2.3
 
 - Fixed version MAC calculation.

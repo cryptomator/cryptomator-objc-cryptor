@@ -8,7 +8,9 @@
 
 #import "SETOCryptorProvider.h"
 #import "SETOCryptorV3.h"
+#import "SETOCryptorV4.h"
 #import "SETOCryptorV5.h"
+#import "SETOCryptorV6.h"
 #import "SETOMasterKey.h"
 
 #import "SETOCryptoSupport.h"
@@ -21,7 +23,7 @@
 
 NSString *const kSETOCryptorProviderErrorDomain = @"SETOCryptorProviderErrorDomain";
 
-NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion5;
+NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion6;
 NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
 
 int const kSETOCryptorProviderKeyLength = 256;
@@ -68,7 +70,13 @@ int const kSETOCryptorProviderKeyLength = 256;
 	}
 
 	// scrypt key derivation:
-	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *passwordData;
+	if (masterKey.version >= SETOCryptorVersion6) {
+		// beginning with vault version 6, password is normalized to NFC:
+		passwordData = [[password precomposedStringWithCanonicalMapping] dataUsingEncoding:NSUTF8StringEncoding];
+	} else {
+		passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+	}
 	NSData *scryptSalt = masterKey.scryptSalt;
 	uint64_t costParam = masterKey.scryptCostParam;
 	uint32_t blockSize = (uint32_t)masterKey.scryptBlockSize;
@@ -175,10 +183,13 @@ int const kSETOCryptorProviderKeyLength = 256;
 + (SETOCryptor *)cryptorWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey forVersion:(SETOCryptorVersion)version {
 	switch (version) {
 		case SETOCryptorVersion3:
-		case SETOCryptorVersion4:
 			return [[SETOCryptorV3 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
+		case SETOCryptorVersion4:
+			return [[SETOCryptorV4 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 		case SETOCryptorVersion5:
 			return [[SETOCryptorV5 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
+		case SETOCryptorVersion6:
+			return [[SETOCryptorV6 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 	}
 }
 

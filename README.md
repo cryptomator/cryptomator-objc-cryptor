@@ -15,7 +15,7 @@ SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults. Fo
 
 The easiest way to use SETOCryptomatorCryptor in your app is via [CocoaPods](http://cocoapods.org/ "CocoaPods").
 
-1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.2.0'`
+1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.3.0'`
 2. Run the command `pod install` from the Podfile folder directory.
 
 ## Usage

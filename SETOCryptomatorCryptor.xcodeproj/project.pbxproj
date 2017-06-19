@@ -41,6 +41,10 @@
 		74CBDFB91C5834F70055121F /* sysendian.h in Headers */ = {isa = PBXBuildFile; fileRef = 74CBDFB41C5834F70055121F /* sysendian.h */; };
 		74CBDFBB1C58350C0055121F /* SETOAesSivCipherUtilTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */; };
 		74E6185A1C69131D0062027B /* cleartext.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 74E618561C69131D0062027B /* cleartext.jpg */; };
+		74E9382A1EF8746B0031FC29 /* SETOCryptorV6.h in Headers */ = {isa = PBXBuildFile; fileRef = 74E938281EF8746B0031FC29 /* SETOCryptorV6.h */; };
+		74E9382B1EF8746B0031FC29 /* SETOCryptorV6.m in Sources */ = {isa = PBXBuildFile; fileRef = 74E938291EF8746B0031FC29 /* SETOCryptorV6.m */; };
+		74E938301EF87A710031FC29 /* SETOCryptorV4.h in Headers */ = {isa = PBXBuildFile; fileRef = 74E9382E1EF87A710031FC29 /* SETOCryptorV4.h */; };
+		74E938311EF87A710031FC29 /* SETOCryptorV4.m in Sources */ = {isa = PBXBuildFile; fileRef = 74E9382F1EF87A710031FC29 /* SETOCryptorV4.m */; };
 		C345941DF521F549EF62BB34 /* libPods-SETOCryptomatorCryptor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B8E98F76390874E0CCD120A4 /* libPods-SETOCryptomatorCryptor.a */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +96,10 @@
 		74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOAesSivCipherUtilTests.m; sourceTree = "<group>"; };
 		74E618561C69131D0062027B /* cleartext.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cleartext.jpg; sourceTree = "<group>"; };
 		74E618581C69131D0062027B /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		74E938281EF8746B0031FC29 /* SETOCryptorV6.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV6.h; sourceTree = "<group>"; };
+		74E938291EF8746B0031FC29 /* SETOCryptorV6.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV6.m; sourceTree = "<group>"; };
+		74E9382E1EF87A710031FC29 /* SETOCryptorV4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV4.h; sourceTree = "<group>"; };
+		74E9382F1EF87A710031FC29 /* SETOCryptorV4.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV4.m; sourceTree = "<group>"; };
 		77691E737EDB5B85329FEB98 /* Pods-SETOCryptomatorCryptor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SETOCryptomatorCryptor.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SETOCryptomatorCryptor/Pods-SETOCryptomatorCryptor.debug.xcconfig"; sourceTree = "<group>"; };
 		B8E98F76390874E0CCD120A4 /* libPods-SETOCryptomatorCryptor.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SETOCryptomatorCryptor.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F49C11DE4F20EB91B39137EB /* Pods-SETOCryptomatorCryptor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SETOCryptomatorCryptor.release.xcconfig"; path = "Pods/Target Support Files/Pods-SETOCryptomatorCryptor/Pods-SETOCryptomatorCryptor.release.xcconfig"; sourceTree = "<group>"; };
@@ -223,7 +231,9 @@
 				74A9FE861D1AD81E000399B6 /* Util */,
 				74A9FE871D1AD82F000399B6 /* Core */,
 				74A9FE901D1C327E000399B6 /* Version 3 */,
+				74E9382D1EF87A410031FC29 /* Version 4 */,
 				747C755C1D79C92C002EAD3B /* Version 5 */,
+				74E938271EF8744A0031FC29 /* Version 6 */,
 			);
 			path = SETOCryptomatorCryptor;
 			sourceTree = "<group>";
@@ -267,6 +277,24 @@
 			path = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		74E938271EF8744A0031FC29 /* Version 6 */ = {
+			isa = PBXGroup;
+			children = (
+				74E938281EF8746B0031FC29 /* SETOCryptorV6.h */,
+				74E938291EF8746B0031FC29 /* SETOCryptorV6.m */,
+			);
+			name = "Version 6";
+			sourceTree = "<group>";
+		};
+		74E9382D1EF87A410031FC29 /* Version 4 */ = {
+			isa = PBXGroup;
+			children = (
+				74E9382E1EF87A710031FC29 /* SETOCryptorV4.h */,
+				74E9382F1EF87A710031FC29 /* SETOCryptorV4.m */,
+			);
+			name = "Version 4";
+			sourceTree = "<group>";
+		};
 		FC7C0D2153DE8B168208668D /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -294,7 +322,9 @@
 				74CBDFB91C5834F70055121F /* sysendian.h in Headers */,
 				74CBDFB61C5834F70055121F /* crypto_scrypt.h in Headers */,
 				74CBDFA11C5834EF0055121F /* SETOAesSivCipherUtil.h in Headers */,
+				74E9382A1EF8746B0031FC29 /* SETOCryptorV6.h in Headers */,
 				74CBDFA71C5834EF0055121F /* SETOCryptoSupport.h in Headers */,
+				74E938301EF87A710031FC29 /* SETOCryptorV4.h in Headers */,
 				74CBDFA21C5834EF0055121F /* SETOAsyncCryptor.h in Headers */,
 				74A9FE8E1D1C0714000399B6 /* SETOCryptorProvider.h in Headers */,
 			);
@@ -307,12 +337,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 74CBDF8B1C58342F0055121F /* Build configuration list for PBXNativeTarget "SETOCryptomatorCryptor" */;
 			buildPhases = (
-				19AC329DC51E75A89290D5AB /* Check Pods Manifest.lock */,
+				19AC329DC51E75A89290D5AB /* [CP] Check Pods Manifest.lock */,
 				74CBDF721C58342F0055121F /* Sources */,
 				74CBDF731C58342F0055121F /* Frameworks */,
 				74CBDF741C58342F0055121F /* Headers */,
 				74CBDF751C58342F0055121F /* Resources */,
-				C6C905573AA5E7447CB55630 /* Copy Pods Resources */,
+				C6C905573AA5E7447CB55630 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -347,7 +377,7 @@
 		74CBDF6E1C58342F0055121F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = setoLabs;
 				TargetAttributes = {
 					74CBDF761C58342F0055121F = {
@@ -397,29 +427,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		19AC329DC51E75A89290D5AB /* Check Pods Manifest.lock */ = {
+		19AC329DC51E75A89290D5AB /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Check Pods Manifest.lock";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		C6C905573AA5E7447CB55630 /* Copy Pods Resources */ = {
+		C6C905573AA5E7447CB55630 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy Pods Resources";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -435,6 +465,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				74CBDF9F1C5834EF0055121F /* NSString+SETOBase32Validation.m in Sources */,
+				74E9382B1EF8746B0031FC29 /* SETOCryptorV6.m in Sources */,
+				74E938311EF87A710031FC29 /* SETOCryptorV4.m in Sources */,
 				74CBDFA01C5834EF0055121F /* SETOAesSivCipherUtil.c in Sources */,
 				74A9FE811D1AD5C2000399B6 /* SETOCryptorV3.m in Sources */,
 				74CBDFA31C5834EF0055121F /* SETOAsyncCryptor.m in Sources */,
@@ -479,13 +511,21 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -526,13 +566,21 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -563,6 +611,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 77691E737EDB5B85329FEB98 /* Pods-SETOCryptomatorCryptor.debug.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -580,6 +629,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F49C11DE4F20EB91B39137EB /* Pods-SETOCryptomatorCryptor.release.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;

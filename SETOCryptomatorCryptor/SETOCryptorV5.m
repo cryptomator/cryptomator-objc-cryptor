@@ -7,36 +7,17 @@
 //
 
 #import "SETOCryptorV5.h"
-#import "SETOMasterKey.h"
 
-#import "NSString+SETOBase32Validation.h"
-#import "SETOAesSivCipherUtil.h"
 #import "SETOCryptoSupport.h"
 
-#import <CommonCrypto/CommonCryptor.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
 #import <Security/Security.h>
-#import <Base32/MF_Base32Additions.h>
 #import <openssl/evp.h>
-#import "e_aeswrap.h"
-#import "crypto_scrypt.h"
-
-// exposing SETOMasterKey's properties for direct mutation
-@interface SETOMasterKey ()
-@property (nonatomic, assign) uint32_t version;
-@property (nonatomic, strong) NSData *versionMac;
-@property (nonatomic, strong) NSData *scryptSalt;
-@property (nonatomic, assign) uint64_t scryptCostParam;
-@property (nonatomic, assign) uint32_t scryptBlockSize;
-@property (nonatomic, strong) NSData *primaryMasterKey;
-@property (nonatomic, strong) NSData *macMasterKey;
-@end
 
 #pragma mark -
 
 size_t const kSETOCryptorV5BlockSize = 16;
-int const kSETOCryptorV5KeyLength = 256;
 int const kSETOCryptorV5NonceLength = 16;
 int const kSETOCryptorV5HeaderLength = 88;
 int const kSETOCryptorV5HeaderPayloadLength = 40;
@@ -49,220 +30,7 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 
 @implementation SETOCryptorV5
 
-#pragma mark - Initialization
-
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
-	if ([NSThread isMainThread]) {
-		NSLog(@"Warning: -[SETOCryptor masterKeyWithPassword:] should be called from a background thread, as random number generation will benefit from UI interaction.");
-	}
-
-	// create random bytes for scrypt salt:
-	unsigned char scryptSaltBuffer[8];
-	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(scryptSaltBuffer), scryptSaltBuffer) == -1) {
-		NSLog(@"Unable to create random bytes for scryptSaltBuffer.");
-		return nil;
-	}
-
-	// scrypt key derivation:
-	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-	NSData *scryptSalt = [NSData dataWithBytes:scryptSaltBuffer length:sizeof(scryptSaltBuffer)];
-	uint64_t costParam = 16384;
-	uint32_t blockSize = 8;
-	unsigned char kekBytes[kSETOCryptorV5KeyLength / 8];
-	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
-
-	// key wrapping:
-	const EVP_CIPHER *cipher = EVP_aes_256_ecb();
-	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
-	EVP_EncryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV5KeyLength / 8 + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, self.primaryMasterKey.bytes, (unsigned int)self.primaryMasterKey.length);
-	NSData *wrappedPrimaryMasterKey = [NSData dataWithBytes:wrappedPrimaryMasterKeyBuffer length:sizeof(wrappedPrimaryMasterKeyBuffer)];
-	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV5KeyLength / 8 + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, self.macMasterKey.bytes, (unsigned int)self.macMasterKey.length);
-	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
-	EVP_CIPHER_CTX_cleanup(&ctx);
-
-	// calculate mac over version:
-	unsigned char versionMac[CC_SHA256_DIGEST_LENGTH];
-	unsigned char versionBytes[sizeof(uint32_t)] = {0};
-	int_to_big_endian_bytes((uint32_t)self.version, versionBytes);
-	CCHmacContext versionHmacContext;
-	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, (size_t)self.macMasterKey.length);
-	CCHmacUpdate(&versionHmacContext, versionBytes, sizeof(versionBytes));
-	CCHmacFinal(&versionHmacContext, &versionMac);
-
-	// master key assembly:
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	masterKey.version = (uint32_t)self.version;
-	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
-	masterKey.scryptSalt = scryptSalt;
-	masterKey.scryptCostParam = costParam;
-	masterKey.scryptBlockSize = blockSize;
-	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;
-	masterKey.macMasterKey = wrappedMacMasterKey;
-
-	// done:
-	return masterKey;
-}
-
-#pragma mark - Path Encryption and Decryption
-
-- (NSString *)encryptDirectoryId:(NSString *)directoryId {
-	NSParameterAssert(directoryId);
-	NSData *cleartext = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
-	unsigned char *ciphertext = malloc(cleartext.length + 16);
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 0, NULL, NULL, ciphertext)) {
-		free(ciphertext);
-		return nil;
-	}
-	unsigned char hashed[CC_SHA1_DIGEST_LENGTH];
-	CC_SHA1(ciphertext, (CC_LONG)cleartext.length + 16, hashed);
-	free(ciphertext);
-	NSData *ciphertextData = [NSData dataWithBytes:hashed length:CC_SHA1_DIGEST_LENGTH];
-	return [ciphertextData base32String];
-}
-
-- (NSString *)encryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
-	NSParameterAssert(filename);
-	NSData *cleartext = [filename dataUsingEncoding:NSUTF8StringEncoding];
-	unsigned char *ciphertext = malloc(cleartext.length + 16);
-	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
-	const unsigned char *additionalData[1] = {directoryIdData.bytes};
-	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 1, additionalData, additionalDataSizes, ciphertext)) {
-		free(ciphertext);
-		return nil;
-	}
-	NSData *ciphertextData = [NSData dataWithBytesNoCopy:ciphertext length:cleartext.length + 16];
-	return [ciphertextData base32String];
-}
-
-- (NSString *)decryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
-	NSParameterAssert(filename);
-	if (!filename.seto_isValidBase32Encoded) {
-		return nil;
-	}
-	NSData *ciphertext = [NSData dataWithBase32String:filename];
-	if (!ciphertext) {
-		return nil;
-	}
-	unsigned char *cleartext = malloc(ciphertext.length - 16);
-	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
-	const unsigned char *additionalData[1] = {directoryIdData.bytes};
-	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_dec(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, ciphertext.bytes, ciphertext.length, 1, additionalData, additionalDataSizes, cleartext)) {
-		free(cleartext);
-		return nil;
-	}
-	NSData *cleartextData = [NSData dataWithBytesNoCopy:cleartext length:ciphertext.length - 16];
-	return [[NSString alloc] initWithData:cleartextData encoding:NSUTF8StringEncoding];
-}
-
 #pragma mark - File Content Encryption and Decryption
-
-- (void)authenticateFileAtPath:(NSString *)path callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback {
-	NSParameterAssert(path);
-	NSParameterAssert(callback);
-
-	// read ciphertext file size:
-	NSError *fileAttributesError;
-	NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&fileAttributesError];
-	if (fileAttributesError) {
-		callback(fileAttributesError);
-		return;
-	}
-	uint64_t totalFileSize = [fileAttributes fileSize];
-
-	// init progress:
-	uint64_t bytesProcessed = 0;
-	if (progressCallback) {
-		progressCallback(0.0);
-	}
-
-	// open ciphertext input:
-	NSInputStream *input = [NSInputStream inputStreamWithFileAtPath:path];
-	[input scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-	[input open];
-
-	// read file header:
-	unsigned char header[kSETOCryptorV5HeaderLength];
-	int inputLength = (int)[input read:header maxLength:sizeof(header)];
-	if (inputLength != sizeof(header)) {
-		[input close];
-		callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorCorruptedFileHeaderError userInfo:nil]);
-		return;
-	}
-	bytesProcessed += inputLength;
-
-	// iv is at the beginning of file header:
-	unsigned char *iv = &header[0];
-
-	// calculate mac over file header:
-	unsigned char calculatedHeaderMac[CC_SHA256_DIGEST_LENGTH];
-	CCHmacContext headerHmacContext;
-	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
-	CCHmacUpdate(&headerHmacContext, header, 56); // 56 bytes: 16 bytes iv + 8 bytes file size + 32 bytes file key (without mac)
-	CCHmacFinal(&headerHmacContext, calculatedHeaderMac);
-
-	// calculate macs over file chunks:
-	BOOL chunkMacsEqual = YES;
-	uint64_t chunkNumber = 0;
-	int ciphertextChunkLength = kSETOCryptorV5NonceLength + kSETOCryptorV5ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH; // nonce + payload + mac
-	NSMutableData *ciphertextChunk = [NSMutableData dataWithLength:ciphertextChunkLength];
-	while (input.hasBytesAvailable) {
-		// read chunk:
-		unsigned char *ciphertextChunkBuffer = ciphertextChunk.mutableBytes;
-		int inputLength = (int)[input read:ciphertextChunkBuffer maxLength:ciphertextChunkLength];
-		if (inputLength == 0) {
-			continue;
-		} else if (inputLength < kSETOCryptorV5NonceLength + CC_SHA256_DIGEST_LENGTH) {
-			[input close];
-			callback([NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorAuthenticationFailedError userInfo:nil]);
-			return;
-		}
-
-		// init authentication:
-		unsigned char *expectedMac = &ciphertextChunkBuffer[inputLength - CC_SHA256_DIGEST_LENGTH];
-		unsigned char calculatedMac[CC_SHA256_DIGEST_LENGTH];
-		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
-		unsigned char *nonce = &ciphertextChunkBuffer[0];
-		unsigned char *payload = &ciphertextChunkBuffer[kSETOCryptorV5NonceLength];
-		int payloadLength = inputLength - kSETOCryptorV5NonceLength - CC_SHA256_DIGEST_LENGTH;
-		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
-
-		// calculate chunk mac:
-		CCHmacContext chunkHmacContext;
-		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
-		CCHmacUpdate(&chunkHmacContext, iv, 16);
-		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
-		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptorV5NonceLength);
-		CCHmacUpdate(&chunkHmacContext, payload, payloadLength);
-		CCHmacFinal(&chunkHmacContext, calculatedMac);
-
-		// constant time comparison of chunk mac:
-		chunkMacsEqual &= compare_bytes(calculatedMac, expectedMac, CC_SHA256_DIGEST_LENGTH);
-
-		// progress:
-		bytesProcessed += inputLength;
-		chunkNumber++;
-		if (progressCallback) {
-			progressCallback((CGFloat)bytesProcessed / totalFileSize);
-		}
-	}
-
-	// constant time comparison of header mac:
-	unsigned char *expectedHeaderMac = &header[56];
-	BOOL headerMacsEqual = compare_bytes(calculatedHeaderMac, expectedHeaderMac, CC_SHA256_DIGEST_LENGTH);
-
-	// done:
-	[input close];
-	if (progressCallback) {
-		progressCallback(1.0);
-	}
-	callback(headerMacsEqual && chunkMacsEqual ? nil : [NSError errorWithDomain:kSETOCryptorErrorDomain code:SETOCryptorAuthenticationFailedError userInfo:nil]);
-}
 
 - (void)encryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback {
 	NSParameterAssert(inPath);
@@ -556,16 +324,6 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 		progressCallback(1.0);
 	}
 	callback(nil);
-}
-
-#pragma mark - Chunk Sizes
-
-- (NSUInteger)cleartextChunkSize {
-	return kSETOCryptorV5ChunkPayloadLength;
-}
-
-- (NSUInteger)ciphertextChunkSize {
-	return kSETOCryptorV5NonceLength + kSETOCryptorV5ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
 }
 
 @end

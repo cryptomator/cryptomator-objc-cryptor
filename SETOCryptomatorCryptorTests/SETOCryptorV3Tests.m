@@ -6,9 +6,8 @@
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
-#import "SETOCryptorV3.h"
+#import "SETOCryptor.h"
 #import "SETOCryptorProvider.h"
 #import "SETOMasterKey.h"
 

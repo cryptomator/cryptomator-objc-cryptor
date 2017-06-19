@@ -13,7 +13,6 @@
 #import "SETOAesSivCipherUtil.h"
 #import "SETOCryptoSupport.h"
 
-#import <CommonCrypto/CommonCryptor.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
 #import <Security/Security.h>

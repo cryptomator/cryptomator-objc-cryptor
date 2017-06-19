@@ -6,7 +6,6 @@
 //  Copyright © 2015-2016 setoLabs. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 #import "SETOAesSivCipherUtil.h"
 
