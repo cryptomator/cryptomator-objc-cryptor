@@ -2,8 +2,8 @@
 //  NSString+SETOBase32Validation.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Tobias Hagemann on 10/05/15.
-//  Copyright © 2015-2016 setoLabs. All rights reserved.
+//  Created by Tobias Hagemann on 10.05.15.
+//  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
 #import "NSString+SETOBase32Validation.h"

@@ -2,8 +2,8 @@
 //  SETOCryptor.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Sebastian Stenzel on 14/02/15.
-//  Copyright © 2015-2016 setoLabs. All rights reserved.
+//  Created by Sebastian Stenzel on 14.02.15.
+//  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
 #import "SETOCryptor.h"

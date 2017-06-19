@@ -2,8 +2,8 @@
 //  SETOCryptorProviderTests.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Tobias Hagemann on 12/09/16.
-//  Copyright © 2016 setoLabs. All rights reserved.
+//  Created by Tobias Hagemann on 12.09.16.
+//  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

@@ -2,8 +2,8 @@
 //  SETOCryptorV3Tests.m
 //  SETOCryptomatorCryptor
 //
-//  Created by Sebastian Stenzel on 15/02/15.
-//  Copyright © 2015-2016 setoLabs. All rights reserved.
+//  Created by Sebastian Stenzel on 15.02.15.
+//  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

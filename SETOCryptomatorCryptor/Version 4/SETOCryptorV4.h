@@ -3,7 +3,7 @@
 //  SETOCryptomatorCryptor
 //
 //  Created by Tobias Hagemann on 19.06.17.
-//  Copyright © 2017 setoLabs. All rights reserved.
+//  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
 #import "SETOCryptorV3.h"
