@@ -58,6 +58,10 @@ int const kSETOCryptorProviderKeyLength = 256;
 }
 
 + (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password error:(NSError **)error {
+	return [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:password pepper:nil error:error];
+}
+
++ (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password pepper:(NSData *)pepper error:(NSError **)error {
 	NSParameterAssert(masterKey);
 	NSParameterAssert(password);
 
@@ -69,6 +73,12 @@ int const kSETOCryptorProviderKeyLength = 256;
 		return nil;
 	}
 
+	// add pepper bytes to scrypt salt:
+	unsigned char saltAndPepperBuffer[masterKey.scryptSalt.length + pepper.length];
+	memcpy(&saltAndPepperBuffer[0], masterKey.scryptSalt.bytes, masterKey.scryptSalt.length);
+	memcpy(&saltAndPepperBuffer[8], pepper.bytes, pepper.length);
+	NSData *saltAndPepper = [NSData dataWithBytes:saltAndPepperBuffer length:sizeof(saltAndPepperBuffer)];
+
 	// scrypt key derivation:
 	NSData *passwordData;
 	if (masterKey.version >= SETOCryptorVersion6) {
@@ -77,11 +87,10 @@ int const kSETOCryptorProviderKeyLength = 256;
 	} else {
 		passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
 	}
-	NSData *scryptSalt = masterKey.scryptSalt;
 	uint64_t costParam = masterKey.scryptCostParam;
 	uint32_t blockSize = (uint32_t)masterKey.scryptBlockSize;
 	unsigned char kekBytes[kSETOCryptorProviderKeyLength / 8];
-	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
+	crypto_scrypt(passwordData.bytes, passwordData.length, saltAndPepper.bytes, saltAndPepper.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
 
 	// unwrap primary and mac master keys:
 	const EVP_CIPHER *cipher = EVP_aes_256_ecb();

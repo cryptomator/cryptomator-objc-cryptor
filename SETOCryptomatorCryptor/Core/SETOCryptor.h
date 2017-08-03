@@ -69,6 +69,16 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 - (SETOMasterKey *)masterKeyWithPassword:(NSString *)password;
 
+/**
+ *  Creates a @c SETOMasterKey object with the specified password and pepper.
+ *
+ *  @param password The user-assigned password from which the keys will be derived.
+ *  @param pepper   An application-specific pepper added to the salt during key derivation (if applicable).
+ *
+ *  @return The newly-initialized master key.
+ */
+- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper;
+
 /**-------------------------------------
  *  @name Path Encryption and Decryption
  *--------------------------------------

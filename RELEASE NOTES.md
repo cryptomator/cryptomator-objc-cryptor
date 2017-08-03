@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.3.1
+
+- Added support for application-specific peppers.
+
 ## Version 1.3.0
 
 Unicode is hard. The password is now normalized in NFC.

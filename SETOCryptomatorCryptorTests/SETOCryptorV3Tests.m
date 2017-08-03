@@ -108,6 +108,24 @@
 	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" error:nil]);
 }
 
+- (void)testMasterKeyDecryptionWithPepper {
+	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"jkF3rc0WQsntEMlvXSLkquBLPlSYfOUDXDg90VHcj6irG4X/TOGJhA==\",\"hmacMasterKey\":\"jkF3rc0WQsntEMlvXSLkquBLPlSYfOUDXDg90VHcj6irG4X/TOGJhA==\",\"versionMac\":\"iUmRRHITuyJsJbVNqGNw+82YQ4A3Rma7j/y1v0DCVLA=\"}";
+	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
+
+	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
+	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+
+	unsigned char pepperBuffer[1] = {0x01};
+	NSData *pepper = [NSData dataWithBytes:pepperBuffer length:1];
+	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" pepper:pepper error:nil]);
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" pepper:pepper error:nil]);
+
+	unsigned char invalidPepperBuffer[1] = {0x02};
+	NSData *invalidPepper = [NSData dataWithBytes:invalidPepperBuffer length:1];
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" pepper:invalidPepper error:nil]);
+	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" pepper:invalidPepper error:nil]);
+}
+
 - (void)testDecryption {
 	XCTestExpectation *decryptionFinished = [self expectationWithDescription:@"decryption of file finished"];
 

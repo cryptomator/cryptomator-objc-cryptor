@@ -50,25 +50,31 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 #pragma mark - Initialization
 
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
+- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
 	if ([NSThread isMainThread]) {
-		NSLog(@"Warning: -[SETOCryptor masterKeyWithPassword:] should be called from a background thread, as random number generation will benefit from UI interaction.");
+		NSLog(@"Warning: -[SETOCryptor masterKeyWithPassword:pepper:] should be called from a background thread, as random number generation will benefit from UI interaction.");
 	}
 
 	// create random bytes for scrypt salt:
-	unsigned char scryptSaltBuffer[8];
-	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(scryptSaltBuffer), scryptSaltBuffer) == -1) {
-		NSLog(@"Unable to create random bytes for scryptSaltBuffer.");
+	unsigned char saltBuffer[8];
+	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(saltBuffer), saltBuffer) == -1) {
+		NSLog(@"Unable to create random bytes for salt.");
 		return nil;
 	}
+	NSData *salt = [NSData dataWithBytes:saltBuffer length:sizeof(saltBuffer)];
+
+	// add pepper bytes to scrypt salt:
+	unsigned char saltAndPepperBuffer[sizeof(saltBuffer) + pepper.length];
+	memcpy(&saltAndPepperBuffer[0], saltBuffer, sizeof(saltBuffer));
+	memcpy(&saltAndPepperBuffer[8], pepper.bytes, pepper.length);
+	NSData *saltAndPepper = [NSData dataWithBytes:saltAndPepperBuffer length:sizeof(saltAndPepperBuffer)];
 
 	// scrypt key derivation:
 	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-	NSData *scryptSalt = [NSData dataWithBytes:scryptSaltBuffer length:sizeof(scryptSaltBuffer)];
 	uint64_t costParam = 16384;
 	uint32_t blockSize = 8;
 	unsigned char kekBytes[kSETOCryptorV3KeyLength / 8];
-	crypto_scrypt(passwordData.bytes, passwordData.length, scryptSalt.bytes, scryptSalt.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
+	crypto_scrypt(passwordData.bytes, passwordData.length, saltAndPepper.bytes, saltAndPepper.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
 
 	// key wrapping:
 	const EVP_CIPHER *cipher = EVP_aes_256_ecb();
@@ -96,7 +102,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
 	masterKey.version = (uint32_t)self.version;
 	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
-	masterKey.scryptSalt = scryptSalt;
+	masterKey.scryptSalt = salt;
 	masterKey.scryptCostParam = costParam;
 	masterKey.scryptBlockSize = blockSize;
 	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;

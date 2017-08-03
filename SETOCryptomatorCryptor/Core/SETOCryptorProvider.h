@@ -45,6 +45,18 @@ extern NSInteger const kSETOCryptorMinimumSupportedVersion;
 + (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password error:(NSError **)error;
 
 /**
+ *  Creates and initializes a @c SETOCryptor object from the specified master key with the specified password and pepper. This is equivalent to an unlocking attempt. If an error occurs, this method returns @p nil and assigns an appropriate error object to the @p error parameter.
+ *
+ *  @param masterKey The master key.
+ *  @param password  The user-assigned password to unlock the cryptor.
+ *  @param pepper    An application-specific pepper added to the salt during key derivation (if applicable).
+ *  @param error     On input, a pointer to an error object. If an error occurs, this pointer is set to an actual error object containing the error information. You may specify @p NULL for this parameter if you do not want the error information.
+ *
+ *  @return The newly-initialized cryptor.
+ */
++ (SETOCryptor *)cryptorFromMasterKey:(SETOMasterKey *)masterKey withPassword:(NSString *)password pepper:(NSData *)pepper error:(NSError **)error;
+
+/**
  *  Calculates the size of the cleartext resulting from the given ciphertext decrypted with the given @c SETOCryptor object.
  *
  *  @param ciphertextSize Pure payload ciphertext. Not including the length of the header.

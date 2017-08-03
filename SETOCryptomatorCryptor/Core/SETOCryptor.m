@@ -31,6 +31,10 @@ NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 }
 
 - (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
+	return [self masterKeyWithPassword:password pepper:nil];
+}
+
+- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
 	NSAssert(NO, @"Overwrite this method.");
 	return nil;
 }

@@ -5,12 +5,6 @@
 - Ensure the bug was not [already reported](https://github.com/cryptomator/cryptomator-objc-cryptor/issues).
 - If you're unable to find an open issue addressing the problem, [submit a new one](https://github.com/cryptomator/cryptomator-objc-cryptor/issues/new).
 
-## Do you have questions?
-
-- Ask questions by [submitting a new issue](https://github.com/cryptomator/cryptomator-objc-cryptor/issues/new).
-- [Contact us](https://cryptomator.org/contact/) directly by writing an email. Wir sprechen auch Deutsch!
-- Have a chat with us on [Gitter](https://gitter.im/cryptomator/cryptomator).
-
 ## Did you write a patch that fixes a bug?
 
 - Open a new pull request with the patch.
