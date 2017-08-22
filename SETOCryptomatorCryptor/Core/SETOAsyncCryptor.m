@@ -33,8 +33,8 @@
 	return [self initWithCryptor:cryptor queue:queue];
 }
 
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
-	return [self.cryptor masterKeyWithPassword:password];
+- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
+	return [self.cryptor masterKeyWithPassword:password pepper:pepper];
 }
 
 #pragma mark - Path Encryption and Decryption

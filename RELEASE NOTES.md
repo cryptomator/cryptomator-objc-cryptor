@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.3.2
+
+- Fixed crash in `SETOAsyncCryptor`, `masterKeyWithPassword:pepper:` method had to be decorated.
+
 ## Version 1.3.1
 
 - Added support for application-specific peppers.
