@@ -43,6 +43,9 @@ NSString *const kSETOMasterKeyMacMasterKeyKey = @"hmacMasterKey";
 }
 
 - (BOOL)updateFromJSONData:(NSData *)jsonData {
+	if (!jsonData) {
+		return NO;
+	}
 	NSError *error;
 	NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
 	if (error) {

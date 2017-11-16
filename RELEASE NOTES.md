@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.3.3
+
+- Fixed crash in `SETOMasterKey`, `updateFromJSONData:` method needed to handle nil data.
+
 ## Version 1.3.2
 
 - Fixed crash in `SETOAsyncCryptor`, `masterKeyWithPassword:pepper:` method had to be decorated.
