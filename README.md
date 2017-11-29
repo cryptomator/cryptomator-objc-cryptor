@@ -18,6 +18,15 @@ The easiest way to use SETOCryptomatorCryptor in your app is via [CocoaPods](htt
 1. Add the following line in the project's Podfile file: `pod 'SETOCryptomatorCryptor', '~> 1.3.0'`
 2. Run the command `pod install` from the Podfile folder directory.
 
+## Audits
+
+- [Version 1.3.0 audit by Cure53](https://cryptomator.org/audits/2017-11-27%20crypto%20cure53.pdf)
+
+| Finding | Comment |
+|---|---|
+| 1u1-22-001 | This issue is related to [cryptolib](https://github.com/cryptomator/cryptolib/), [cryptofs](https://github.com/cryptomator/cryptofs/), and [siv-mode](https://github.com/cryptomator/siv-mode/). |
+| 1u1-22-002 | This issue is related to [siv-mode](https://github.com/cryptomator/siv-mode/). |
+
 ## Usage
 
 ### SETOCryptorProvider
