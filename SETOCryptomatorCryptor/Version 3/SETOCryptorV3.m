@@ -35,7 +35,10 @@
 #pragma mark -
 
 size_t const kSETOCryptorV3BlockSize = 16;
-int const kSETOCryptorV3KeyLength = 256;
+int const kSETOCryptorV3KeyLength = 32; // 256 bit
+int const kSETOCryptorV3DefaultScryptSaltLength = 8;
+uint64_t const kSETOCryptorV3DefaulScryptCostParam = 32768; // 2^15
+uint32_t const kSETOCryptorV3DefaultScryptBlockSize = 8;
 int const kSETOCryptorV3NonceLength = 16;
 int const kSETOCryptorV3HeaderLength = 88;
 int const kSETOCryptorV3HeaderPayloadLength = 40;
@@ -56,7 +59,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	}
 
 	// create random bytes for scrypt salt:
-	unsigned char saltBuffer[8];
+	unsigned char saltBuffer[kSETOCryptorV3DefaultScryptSaltLength];
 	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(saltBuffer), saltBuffer) == -1) {
 		NSLog(@"Unable to create random bytes for salt.");
 		return nil;
@@ -71,20 +74,18 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 	// scrypt key derivation:
 	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-	uint64_t costParam = 16384;
-	uint32_t blockSize = 8;
-	unsigned char kekBytes[kSETOCryptorV3KeyLength / 8];
-	crypto_scrypt(passwordData.bytes, passwordData.length, saltAndPepper.bytes, saltAndPepper.length, costParam, blockSize, 1, kekBytes, sizeof(kekBytes));
+	unsigned char kekBytes[kSETOCryptorV3KeyLength];
+	crypto_scrypt(passwordData.bytes, passwordData.length, saltAndPepper.bytes, saltAndPepper.length, kSETOCryptorV3DefaulScryptCostParam, kSETOCryptorV3DefaultScryptBlockSize, 1, kekBytes, sizeof(kekBytes));
 
 	// key wrapping:
 	const EVP_CIPHER *cipher = EVP_aes_256_ecb();
 	EVP_CIPHER_CTX ctx;
 	EVP_CIPHER_CTX_init(&ctx);
 	EVP_EncryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV3KeyLength + 8];
 	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, self.primaryMasterKey.bytes, (unsigned int)self.primaryMasterKey.length);
 	NSData *wrappedPrimaryMasterKey = [NSData dataWithBytes:wrappedPrimaryMasterKeyBuffer length:sizeof(wrappedPrimaryMasterKeyBuffer)];
-	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV3KeyLength / 8 + 8];
+	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV3KeyLength + 8];
 	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, self.macMasterKey.bytes, (unsigned int)self.macMasterKey.length);
 	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
 	EVP_CIPHER_CTX_cleanup(&ctx);
@@ -103,8 +104,8 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	masterKey.version = (uint32_t)self.version;
 	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
 	masterKey.scryptSalt = salt;
-	masterKey.scryptCostParam = costParam;
-	masterKey.scryptBlockSize = blockSize;
+	masterKey.scryptCostParam = kSETOCryptorV3DefaulScryptCostParam;
+	masterKey.scryptBlockSize = kSETOCryptorV3DefaultScryptBlockSize;
 	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;
 	masterKey.macMasterKey = wrappedMacMasterKey;
 
