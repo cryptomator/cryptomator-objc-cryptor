@@ -17,6 +17,8 @@
 		74A9FE811D1AD5C2000399B6 /* SETOCryptorV3.m in Sources */ = {isa = PBXBuildFile; fileRef = 74A9FE7F1D1AD5C2000399B6 /* SETOCryptorV3.m */; };
 		74A9FE8E1D1C0714000399B6 /* SETOCryptorProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 74A9FE8C1D1C0714000399B6 /* SETOCryptorProvider.h */; };
 		74A9FE8F1D1C0714000399B6 /* SETOCryptorProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 74A9FE8D1D1C0714000399B6 /* SETOCryptorProvider.m */; };
+		74C6B5B6205BCFB0000F04F9 /* insecure_memzero.h in Headers */ = {isa = PBXBuildFile; fileRef = 74C6B5B4205BCFB0000F04F9 /* insecure_memzero.h */; };
+		74C6B5B7205BCFB0000F04F9 /* insecure_memzero.c in Sources */ = {isa = PBXBuildFile; fileRef = 74C6B5B5205BCFB0000F04F9 /* insecure_memzero.c */; };
 		74CBDF7B1C58342F0055121F /* SETOCryptomatorCryptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 74CBDF7A1C58342F0055121F /* SETOCryptomatorCryptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		74CBDF821C58342F0055121F /* SETOCryptomatorCryptor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74CBDF771C58342F0055121F /* SETOCryptomatorCryptor.framework */; };
 		74CBDF871C58342F0055121F /* SETOCryptorV3Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74CBDF861C58342F0055121F /* SETOCryptorV3Tests.m */; };
@@ -69,6 +71,8 @@
 		74A9FE7F1D1AD5C2000399B6 /* SETOCryptorV3.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV3.m; sourceTree = "<group>"; };
 		74A9FE8C1D1C0714000399B6 /* SETOCryptorProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SETOCryptorProvider.h; sourceTree = "<group>"; };
 		74A9FE8D1D1C0714000399B6 /* SETOCryptorProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorProvider.m; sourceTree = "<group>"; };
+		74C6B5B4205BCFB0000F04F9 /* insecure_memzero.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = insecure_memzero.h; sourceTree = "<group>"; };
+		74C6B5B5205BCFB0000F04F9 /* insecure_memzero.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = insecure_memzero.c; sourceTree = "<group>"; };
 		74CBDF771C58342F0055121F /* SETOCryptomatorCryptor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SETOCryptomatorCryptor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		74CBDF7A1C58342F0055121F /* SETOCryptomatorCryptor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOCryptomatorCryptor.h; sourceTree = "<group>"; };
 		74CBDF7C1C58342F0055121F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -251,6 +255,8 @@
 			children = (
 				74CBDFB01C5834F70055121F /* crypto_scrypt.c */,
 				74CBDFB11C5834F70055121F /* crypto_scrypt.h */,
+				74C6B5B5205BCFB0000F04F9 /* insecure_memzero.c */,
+				74C6B5B4205BCFB0000F04F9 /* insecure_memzero.h */,
 				74CBDFB21C5834F70055121F /* sha256.c */,
 				74CBDFB31C5834F70055121F /* sha256.h */,
 				74CBDFB41C5834F70055121F /* sysendian.h */,
@@ -324,6 +330,7 @@
 				74E9382A1EF8746B0031FC29 /* SETOCryptorV6.h in Headers */,
 				74CBDFA71C5834EF0055121F /* SETOCryptoSupport.h in Headers */,
 				74E938301EF87A710031FC29 /* SETOCryptorV4.h in Headers */,
+				74C6B5B6205BCFB0000F04F9 /* insecure_memzero.h in Headers */,
 				74CBDFA21C5834EF0055121F /* SETOAsyncCryptor.h in Headers */,
 				74A9FE8E1D1C0714000399B6 /* SETOCryptorProvider.h in Headers */,
 			);
@@ -477,6 +484,7 @@
 				74CBDFA61C5834EF0055121F /* SETOCryptoSupport.c in Sources */,
 				74A9FE8F1D1C0714000399B6 /* SETOCryptorProvider.m in Sources */,
 				74CBDFA91C5834EF0055121F /* SETOMasterKey.m in Sources */,
+				74C6B5B7205BCFB0000F04F9 /* insecure_memzero.c in Sources */,
 				74CBDFAD1C5834F30055121F /* e_aeswrap.c in Sources */,
 				74CBDFB51C5834F70055121F /* crypto_scrypt.c in Sources */,
 				74CBDFB71C5834F70055121F /* sha256.c in Sources */,
