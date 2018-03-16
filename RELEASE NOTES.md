@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 1.4.0
+
+- Increased default scrypt cost param to 32768.
+- Updated scrypt to version 1.2.1.
+- Updated KZPropertyMapper to version ~> 2.9.0.
+
 ## Version 1.3.3
 
 - Fixed crash in `SETOMasterKey`, `updateFromJSONData:` method needed to handle nil data.
