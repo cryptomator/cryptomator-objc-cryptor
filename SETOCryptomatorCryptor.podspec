@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'SETOCryptomatorCryptor'
-  s.version  = '1.4.0'
+  s.version  = '1.4.1'
   s.license  = 'AGPLv3'
   s.summary  = 'SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults.'
   s.homepage = 'https://github.com/cryptomator/cryptomator-objc-cryptor'
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.frameworks = 'Security'
   s.dependency 'Base32', '~> 1.1.0'
-  s.dependency 'KZPropertyMapper', '~> 2.7.0'
+  s.dependency 'KZPropertyMapper', '~> 2.9.0'
   s.dependency 'OpenSSL-Universal', '~> 1.0.0'
 
   s.subspec 'e_aeswrap' do |ss|

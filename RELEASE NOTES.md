@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.4.1
+
+- Updated KZPropertyMapper to version ~> 2.9.0 in Podspec.
+
 ## Version 1.4.0
 
 - Increased default scrypt cost param to 32768.
