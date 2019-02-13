@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.4.3
+
+- Fixed breaking change introduced in 1.4.2
+
 ## Version 1.4.2
 
 - Fixed crash when trying to decrypt filename with invalid ciphertext
