@@ -8,7 +8,7 @@
 
 #import "NSString+SETOCiphertext.h"
 
-NSString *const kSETOBase32CiphertextPattern = @"^[A-Z2-7]{8}*[A-Z2-7=]{8}$";
+NSString *const kSETOBase32CiphertextPattern = @"^([A-Z2-7]{8})*[A-Z2-7=]{8}$";
 
 @implementation NSString (SETOCiphertext)
 
