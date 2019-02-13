@@ -176,9 +176,15 @@
 }
 
 - (void)testFancyUnicodeFoldernameDecryption {
-	NSString *foo = @"YRDHTXQIW5VLBRHCBKDJJUQ5RQ3ZQY524DT3FYG6NVFSEYMYXMURYF2OMFSVQDAWNEML5XD7TMXYETWVSACXIQZF637LAJP7Q2NJU6Q=";
-	NSString *decrypted = [self.cryptor decryptFilename:foo insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
+	NSString *ciphertext = @"YRDHTXQIW5VLBRHCBKDJJUQ5RQ3ZQY524DT3FYG6NVFSEYMYXMURYF2OMFSVQDAWNEML5XD7TMXYETWVSACXIQZF637LAJP7Q2NJU6Q=";
+	NSString *decrypted = [self.cryptor decryptFilename:ciphertext insideDirectoryWithId:@"63fb3905-9de6-4e0d-9cde-c6494cd6e0ad"];
 	XCTAssertEqualObjects(decrypted, @"So oder so ähnlich könnte Ihr Ordner heißen");
+}
+
+- (void)testInvalidFilenameDecryption {
+	NSString *ciphertext = @"Test";
+	NSString *decrypted = [self.cryptor decryptFilename:ciphertext insideDirectoryWithId:@""];
+	XCTAssertNil(decrypted);
 }
 
 #pragma mark - Encryption & Decryption

@@ -9,7 +9,7 @@
 #import "SETOCryptorV3.h"
 #import "SETOMasterKey.h"
 
-#import "NSString+SETOBase32Validation.h"
+#import "NSString+SETOCiphertext.h"
 #import "SETOAesSivCipherUtil.h"
 #import "SETOCryptoSupport.h"
 
@@ -147,7 +147,7 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 
 - (NSString *)decryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
 	NSParameterAssert(filename);
-	if (!filename.seto_isValidBase32Encoded) {
+	if (!filename.seto_isValidCiphertext) {
 		return nil;
 	}
 	NSData *ciphertext = [NSData dataWithBase32String:filename];
