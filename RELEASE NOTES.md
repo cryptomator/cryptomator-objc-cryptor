@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.4.2
+
+- Fixed crash when trying to decrypt filename with invalid ciphertext
+
 ## Version 1.4.1
 
 - Updated KZPropertyMapper to version ~> 2.9.0 in Podspec.
