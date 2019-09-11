@@ -1,0 +1,26 @@
+PODS:
+  - Base32 (1.1.2)
+  - KZPropertyMapper (2.9)
+  - OpenSSL-Universal (1.0.2.18):
+    - OpenSSL-Universal/Static (= 1.0.2.18)
+  - OpenSSL-Universal/Static (1.0.2.18)
+
+DEPENDENCIES:
+  - Base32 (~> 1.1.0)
+  - KZPropertyMapper (~> 2.9.0)
+  - OpenSSL-Universal (~> 1.0.0)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Base32
+    - KZPropertyMapper
+    - OpenSSL-Universal
+
+SPEC CHECKSUMS:
+  Base32: 163c298644d184e89ca4e00a996bad6bf5166390
+  KZPropertyMapper: 26e5a63c47cf4c7b1a1c2bdc853a9406200f8868
+  OpenSSL-Universal: d10ab08e0b258023e5184f77660b1b9f4ec93926
+
+PODFILE CHECKSUM: bd07d947f0599158b5025e62bb90330561bd7d85
+
+COCOAPODS: 1.6.0
