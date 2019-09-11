@@ -9,7 +9,9 @@
 #import "SETOCryptorV3.h"
 
 /**
- *  Beginning with vault format v4, directories have a 0 (zero) prefix instead of a _ (underscore) suffix. No implementation needed because this change isn't part of this library.
+ *  Beginning with vault format v4, directories have a different trait.
+ *
+ *  Directories now have 0 (zero) prefix instead of a _ (underscore) suffix. No implementation needed because this change isn't part of this library.
  */
 @interface SETOCryptorV4 : SETOCryptorV3
 

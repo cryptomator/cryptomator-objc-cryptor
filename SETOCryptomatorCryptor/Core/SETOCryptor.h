@@ -22,7 +22,8 @@ typedef NS_ENUM(NSInteger, SETOCryptorVersion) {
 	SETOCryptorVersion3 = 3,
 	SETOCryptorVersion4 = 4,
 	SETOCryptorVersion5 = 5,
-	SETOCryptorVersion6 = 6
+	SETOCryptorVersion6 = 6,
+	SETOCryptorVersion7 = 7
 };
 
 typedef void (^SETOCryptorCompletionCallback)(NSError *error);

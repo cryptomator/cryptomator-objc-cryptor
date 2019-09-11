@@ -11,6 +11,7 @@
 #import "SETOCryptorV4.h"
 #import "SETOCryptorV5.h"
 #import "SETOCryptorV6.h"
+#import "SETOCryptorV7.h"
 #import "SETOMasterKey.h"
 
 #import "SETOCryptoSupport.h"
@@ -23,7 +24,7 @@
 
 NSString *const kSETOCryptorProviderErrorDomain = @"SETOCryptorProviderErrorDomain";
 
-NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion6;
+NSInteger const kSETOCryptorCurrentVersion = SETOCryptorVersion7;
 NSInteger const kSETOCryptorMinimumSupportedVersion = SETOCryptorVersion3;
 
 int const kSETOCryptorProviderKeyLength = 256;
@@ -199,6 +200,8 @@ int const kSETOCryptorProviderKeyLength = 256;
 			return [[SETOCryptorV5 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 		case SETOCryptorVersion6:
 			return [[SETOCryptorV6 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
+		case SETOCryptorVersion7:
+			return [[SETOCryptorV7 alloc] initWithPrimaryMasterKey:primaryMasterKey macMasterKey:macMasterKey version:version];
 	}
 }
 

@@ -10,6 +10,8 @@
 
 @implementation SETOCryptorV6
 
+#pragma mark - Initialization
+
 - (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
 	NSString *normalizedPassword = [password precomposedStringWithCanonicalMapping];
 	return [super masterKeyWithPassword:normalizedPassword];

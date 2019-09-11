@@ -9,7 +9,6 @@
 #import "SETOCryptorV3.h"
 #import "SETOMasterKey.h"
 
-#import "NSString+SETOCiphertext.h"
 #import "SETOAesSivCipherUtil.h"
 #import "SETOCryptoSupport.h"
 
@@ -43,6 +42,7 @@ int const kSETOCryptorV3NonceLength = 16;
 int const kSETOCryptorV3HeaderLength = 88;
 int const kSETOCryptorV3HeaderPayloadLength = 40;
 int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
+NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2-7=]{8}$";
 
 @interface SETOCryptorV3 ()
 @property (nonatomic, copy) NSData *primaryMasterKey;
@@ -142,15 +142,15 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 		return nil;
 	}
 	NSData *ciphertextData = [NSData dataWithBytesNoCopy:ciphertext length:cleartext.length + 16];
-	return [ciphertextData base32String];
+	return [self encodeFilename:ciphertextData];
 }
 
 - (NSString *)decryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId {
 	NSParameterAssert(filename);
-	if (!filename.seto_isValidCiphertext) {
+	if (![self isValidEncryptedFilename:filename]) {
 		return nil;
 	}
-	NSData *ciphertext = [NSData dataWithBase32String:filename];
+	NSData *ciphertext = [self decodeFilename:filename];
 	if (!ciphertext) {
 		return nil;
 	}
@@ -164,6 +164,22 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 	}
 	NSData *cleartextData = [NSData dataWithBytesNoCopy:cleartext length:ciphertext.length - 16];
 	return [[NSString alloc] initWithData:cleartextData encoding:NSUTF8StringEncoding];
+}
+
+#pragma mark - Path Encoding and Decoding
+
+- (NSString *)encodeFilename:(NSData *)filename {
+	return [filename base32String];
+}
+
+- (NSData *)decodeFilename:(NSString *)filename {
+	return [NSData dataWithBase32String:filename];
+}
+
+- (BOOL)isValidEncryptedFilename:(NSString *)filename {
+	NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:kSETOCryptorV3CiphertextFilenamePattern options:NSRegularExpressionCaseInsensitive error:NULL];
+	NSUInteger numberOfMatches = [regex numberOfMatchesInString:filename options:0 range:NSMakeRange(0, filename.length)];
+	return numberOfMatches > 0;
 }
 
 #pragma mark - File Content Encryption and Decryption
