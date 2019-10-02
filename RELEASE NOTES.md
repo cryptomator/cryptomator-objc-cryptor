@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 1.5.0
+
+Filenames are encoded with base64url so that name shortenings are less likely. The ciphertext file layout has been redesigned.
+
+- Added vault version 7 compatibility.
+
 ## Version 1.4.3
 
 - Fixed breaking change introduced in 1.4.2
