@@ -9,7 +9,7 @@
 #import "SETOCryptorV6.h"
 
 /**
- *  Beginning with vault format v7, filenames are encoded with Base64 so that name shortenings are less likely. The ciphertext file layout has been redesigned.
+ *  Beginning with vault format v7, filenames are encoded with base64url so that name shortenings are less likely. The ciphertext file layout has been redesigned.
  *
  *  This is an example of the new vault structure:
  *  @code
