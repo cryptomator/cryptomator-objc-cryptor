@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.5.2
+
+- Simplified `-[NSData seto_base64urlEncodedString]` method.
+
 ## Version 1.5.1
 
 - Added `NSData+SETOBase64urlEncoding` to public header files.
