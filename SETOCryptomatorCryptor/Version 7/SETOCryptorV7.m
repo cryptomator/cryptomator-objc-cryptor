@@ -17,7 +17,7 @@ NSString *const kSETOCryptorV7CiphertextFilenamePattern = @"^([a-zA-Z0-9-_]{4})*
 #pragma mark - Path Encoding and Decoding
 
 - (NSString *)encodeFilename:(NSData *)filename {
-	return [filename seto_base64urlEncodedString:filename];
+	return [filename seto_base64urlEncodedString];
 }
 
 - (NSData *)decodeFilename:(NSString *)filename {

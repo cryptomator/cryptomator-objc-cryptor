@@ -16,11 +16,11 @@
 	return [[NSData alloc] initWithBase64EncodedString:base64String options:0];
 }
 
-- (NSString *)seto_base64urlEncodedString:(NSData *)data {
-	if (!data.bytes) {
+- (NSString *)seto_base64urlEncodedString {
+	if (!self.bytes) {
 		return [NSString string];
 	}
-	NSString *base64urlString = [data base64EncodedStringWithOptions:0];
+	NSString *base64urlString = [self base64EncodedStringWithOptions:0];
 	base64urlString = [base64urlString stringByReplacingOccurrencesOfString:@"+" withString:@"-"];
 	base64urlString = [base64urlString stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
 	return base64urlString;

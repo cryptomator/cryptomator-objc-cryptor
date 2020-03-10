@@ -11,6 +11,6 @@
 @interface NSData (SETOBase64urlEncoding)
 
 + (instancetype)seto_dataWithBase64urlEncodedString:(NSString *)base64urlString;
-- (NSString *)seto_base64urlEncodedString:(NSData *)data;
+- (NSString *)seto_base64urlEncodedString;
 
 @end
