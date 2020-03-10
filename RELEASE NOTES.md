@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.5.1
+
+- Added `NSData+SETOBase64urlEncoding` to public header files.
+
 ## Version 1.5.0
 
 Filenames are encoded with base64url so that name shortenings are less likely. The ciphertext file layout has been redesigned.
