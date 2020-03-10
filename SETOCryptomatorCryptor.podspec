@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.source   = { :git => 'https://github.com/cryptomator/cryptomator-objc-cryptor.git', :tag => s.version.to_s }
   s.requires_arc = true
 
-  s.public_header_files = "SETOCryptomatorCryptor/Core/{SETOCryptorProvider,SETOCryptor,SETOAsyncCryptor,SETOMasterKey}.h"
+  s.public_header_files = 'SETOCryptomatorCryptor/Core/{SETOCryptorProvider,SETOCryptor,SETOAsyncCryptor,SETOMasterKey}.h', 'SETOCryptomatorCryptor/Util/NSData+SETOBase64urlEncoding.h'
   s.source_files = 'SETOCryptomatorCryptor/**/*.{h,m,c}'
 
   s.platform = :ios, '8.0'
