@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/cocoapods/p/SETOCryptomatorCryptor.svg?style=flat)](http://cocoadocs.org/docsets/SETOCryptomatorCryptor)
 [![Twitter](https://img.shields.io/badge/twitter-@Cryptomator-blue.svg?style=flat)](http://twitter.com/Cryptomator)
 
-SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults. For more information on the security details visit [cryptomator.org](https://cryptomator.org/architecture/).
+SETOCryptomatorCryptor is an iOS crypto library to access Cryptomator vaults. For more information on the security details, visit [docs.cryptomator.org](https://docs.cryptomator.org/en/1.5/security/architecture/).
 
 ## Requirements
 
