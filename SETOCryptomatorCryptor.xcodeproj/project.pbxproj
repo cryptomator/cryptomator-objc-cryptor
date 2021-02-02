@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		742F0F931D79E028002E261F /* ciphertext_v5.aes in Resources */ = {isa = PBXBuildFile; fileRef = 742F0F921D79E005002E261F /* ciphertext_v5.aes */; };
 		742F0F941D79E02A002E261F /* ciphertext_v3.aes in Resources */ = {isa = PBXBuildFile; fileRef = 742F0F911D79E005002E261F /* ciphertext_v3.aes */; };
-		74345BF41D86D666003B96C5 /* SETOCryptorProviderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */; };
 		747C755F1D79C950002EAD3B /* SETOCryptorV5.h in Headers */ = {isa = PBXBuildFile; fileRef = 747C755D1D79C950002EAD3B /* SETOCryptorV5.h */; };
 		747C75601D79C950002EAD3B /* SETOCryptorV5.m in Sources */ = {isa = PBXBuildFile; fileRef = 747C755E1D79C950002EAD3B /* SETOCryptorV5.m */; };
 		747C75621D79D33A002EAD3B /* SETOCryptorV5Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */; };
@@ -20,8 +19,10 @@
 		749BD1CC232BBAE2005AE472 /* SETOCryptorV7Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 749BD1CB232BBAE2005AE472 /* SETOCryptorV7Tests.m */; };
 		74A9FE801D1AD5C2000399B6 /* SETOCryptorV3.h in Headers */ = {isa = PBXBuildFile; fileRef = 74A9FE7E1D1AD5C2000399B6 /* SETOCryptorV3.h */; };
 		74A9FE811D1AD5C2000399B6 /* SETOCryptorV3.m in Sources */ = {isa = PBXBuildFile; fileRef = 74A9FE7F1D1AD5C2000399B6 /* SETOCryptorV3.m */; };
-		74A9FE8E1D1C0714000399B6 /* SETOCryptorProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 74A9FE8C1D1C0714000399B6 /* SETOCryptorProvider.h */; };
-		74A9FE8F1D1C0714000399B6 /* SETOCryptorProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 74A9FE8D1D1C0714000399B6 /* SETOCryptorProvider.m */; };
+		74B7813225C95B1900F266C8 /* SETOSecureRandomMock.m in Sources */ = {isa = PBXBuildFile; fileRef = 74B7813125C95B1900F266C8 /* SETOSecureRandomMock.m */; };
+		74C5663925C7FCBC00F3768B /* SETOMasterKeyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74C5663825C7FCBC00F3768B /* SETOMasterKeyTests.m */; };
+		74C5664425C8376300F3768B /* SETOSecureRandom.h in Headers */ = {isa = PBXBuildFile; fileRef = 74C5664225C8376300F3768B /* SETOSecureRandom.h */; };
+		74C5664525C8376300F3768B /* SETOSecureRandom.m in Sources */ = {isa = PBXBuildFile; fileRef = 74C5664325C8376300F3768B /* SETOSecureRandom.m */; };
 		74C6B5B6205BCFB0000F04F9 /* insecure_memzero.h in Headers */ = {isa = PBXBuildFile; fileRef = 74C6B5B4205BCFB0000F04F9 /* insecure_memzero.h */; };
 		74C6B5B7205BCFB0000F04F9 /* insecure_memzero.c in Sources */ = {isa = PBXBuildFile; fileRef = 74C6B5B5205BCFB0000F04F9 /* insecure_memzero.c */; };
 		74CBDF7B1C58342F0055121F /* SETOCryptomatorCryptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 74CBDF7A1C58342F0055121F /* SETOCryptomatorCryptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -45,6 +46,9 @@
 		74CBDFB81C5834F70055121F /* sha256.h in Headers */ = {isa = PBXBuildFile; fileRef = 74CBDFB31C5834F70055121F /* sha256.h */; };
 		74CBDFB91C5834F70055121F /* sysendian.h in Headers */ = {isa = PBXBuildFile; fileRef = 74CBDFB41C5834F70055121F /* sysendian.h */; };
 		74CBDFBB1C58350C0055121F /* SETOAesSivCipherUtilTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */; };
+		74D4E7EC25C33B7400E04767 /* SETOMasterKeyFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 74D4E7EA25C33B7400E04767 /* SETOMasterKeyFile.h */; };
+		74D4E7ED25C33B7400E04767 /* SETOMasterKeyFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 74D4E7EB25C33B7400E04767 /* SETOMasterKeyFile.m */; };
+		74D4E7F525C46E7400E04767 /* SETOMasterKeyFileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74D4E7F425C46E7400E04767 /* SETOMasterKeyFileTests.m */; };
 		74E6185A1C69131D0062027B /* cleartext.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 74E618561C69131D0062027B /* cleartext.jpg */; };
 		74E9382A1EF8746B0031FC29 /* SETOCryptorV6.h in Headers */ = {isa = PBXBuildFile; fileRef = 74E938281EF8746B0031FC29 /* SETOCryptorV6.h */; };
 		74E9382B1EF8746B0031FC29 /* SETOCryptorV6.m in Sources */ = {isa = PBXBuildFile; fileRef = 74E938291EF8746B0031FC29 /* SETOCryptorV6.m */; };
@@ -66,7 +70,6 @@
 /* Begin PBXFileReference section */
 		742F0F911D79E005002E261F /* ciphertext_v3.aes */ = {isa = PBXFileReference; lastKnownFileType = file; path = ciphertext_v3.aes; sourceTree = "<group>"; };
 		742F0F921D79E005002E261F /* ciphertext_v5.aes */ = {isa = PBXFileReference; lastKnownFileType = file; path = ciphertext_v5.aes; sourceTree = "<group>"; };
-		74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorProviderTests.m; sourceTree = "<group>"; };
 		747C755D1D79C950002EAD3B /* SETOCryptorV5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV5.h; sourceTree = "<group>"; };
 		747C755E1D79C950002EAD3B /* SETOCryptorV5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV5.m; sourceTree = "<group>"; };
 		747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV5Tests.m; sourceTree = "<group>"; };
@@ -77,8 +80,11 @@
 		749BD1CB232BBAE2005AE472 /* SETOCryptorV7Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV7Tests.m; sourceTree = "<group>"; };
 		74A9FE7E1D1AD5C2000399B6 /* SETOCryptorV3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV3.h; sourceTree = "<group>"; };
 		74A9FE7F1D1AD5C2000399B6 /* SETOCryptorV3.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorV3.m; sourceTree = "<group>"; };
-		74A9FE8C1D1C0714000399B6 /* SETOCryptorProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SETOCryptorProvider.h; sourceTree = "<group>"; };
-		74A9FE8D1D1C0714000399B6 /* SETOCryptorProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOCryptorProvider.m; sourceTree = "<group>"; };
+		74B7813025C95B1900F266C8 /* SETOSecureRandomMock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOSecureRandomMock.h; sourceTree = "<group>"; };
+		74B7813125C95B1900F266C8 /* SETOSecureRandomMock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOSecureRandomMock.m; sourceTree = "<group>"; };
+		74C5663825C7FCBC00F3768B /* SETOMasterKeyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOMasterKeyTests.m; sourceTree = "<group>"; };
+		74C5664225C8376300F3768B /* SETOSecureRandom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOSecureRandom.h; sourceTree = "<group>"; };
+		74C5664325C8376300F3768B /* SETOSecureRandom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOSecureRandom.m; sourceTree = "<group>"; };
 		74C6B5B4205BCFB0000F04F9 /* insecure_memzero.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = insecure_memzero.h; sourceTree = "<group>"; };
 		74C6B5B5205BCFB0000F04F9 /* insecure_memzero.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = insecure_memzero.c; sourceTree = "<group>"; };
 		74CBDF771C58342F0055121F /* SETOCryptomatorCryptor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SETOCryptomatorCryptor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,6 +110,9 @@
 		74CBDFB31C5834F70055121F /* sha256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
 		74CBDFB41C5834F70055121F /* sysendian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sysendian.h; sourceTree = "<group>"; };
 		74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SETOAesSivCipherUtilTests.m; sourceTree = "<group>"; };
+		74D4E7EA25C33B7400E04767 /* SETOMasterKeyFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOMasterKeyFile.h; sourceTree = "<group>"; };
+		74D4E7EB25C33B7400E04767 /* SETOMasterKeyFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOMasterKeyFile.m; sourceTree = "<group>"; };
+		74D4E7F425C46E7400E04767 /* SETOMasterKeyFileTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SETOMasterKeyFileTests.m; sourceTree = "<group>"; };
 		74E618561C69131D0062027B /* cleartext.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cleartext.jpg; sourceTree = "<group>"; };
 		74E618581C69131D0062027B /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		74E938281EF8746B0031FC29 /* SETOCryptorV6.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SETOCryptorV6.h; sourceTree = "<group>"; };
@@ -170,6 +179,8 @@
 				74CBDF951C5834EF0055121F /* SETOAesSivCipherUtil.h */,
 				74CBDF9A1C5834EF0055121F /* SETOCryptoSupport.c */,
 				74CBDF9B1C5834EF0055121F /* SETOCryptoSupport.h */,
+				74C5664225C8376300F3768B /* SETOSecureRandom.h */,
+				74C5664325C8376300F3768B /* SETOSecureRandom.m */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -181,10 +192,10 @@
 				74CBDF971C5834EF0055121F /* SETOAsyncCryptor.m */,
 				74CBDF981C5834EF0055121F /* SETOCryptor.h */,
 				74CBDF991C5834EF0055121F /* SETOCryptor.m */,
-				74A9FE8C1D1C0714000399B6 /* SETOCryptorProvider.h */,
-				74A9FE8D1D1C0714000399B6 /* SETOCryptorProvider.m */,
 				74CBDF9C1C5834EF0055121F /* SETOMasterKey.h */,
 				74CBDF9D1C5834EF0055121F /* SETOMasterKey.m */,
+				74D4E7EA25C33B7400E04767 /* SETOMasterKeyFile.h */,
+				74D4E7EB25C33B7400E04767 /* SETOMasterKeyFile.m */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -235,10 +246,13 @@
 				74E618541C69131D0062027B /* Resources */,
 				74E618571C69131D0062027B /* Supporting Files */,
 				74CBDFBA1C58350C0055121F /* SETOAesSivCipherUtilTests.m */,
-				74345BF31D86D666003B96C5 /* SETOCryptorProviderTests.m */,
 				74CBDF861C58342F0055121F /* SETOCryptorV3Tests.m */,
 				747C75611D79D33A002EAD3B /* SETOCryptorV5Tests.m */,
 				749BD1CB232BBAE2005AE472 /* SETOCryptorV7Tests.m */,
+				74D4E7F425C46E7400E04767 /* SETOMasterKeyFileTests.m */,
+				74C5663825C7FCBC00F3768B /* SETOMasterKeyTests.m */,
+				74B7813025C95B1900F266C8 /* SETOSecureRandomMock.h */,
+				74B7813125C95B1900F266C8 /* SETOSecureRandomMock.m */,
 			);
 			path = SETOCryptomatorCryptorTests;
 			sourceTree = "<group>";
@@ -337,12 +351,14 @@
 				74CBDFAE1C5834F30055121F /* e_aeswrap.h in Headers */,
 				74CBDFA81C5834EF0055121F /* SETOMasterKey.h in Headers */,
 				74A9FE801D1AD5C2000399B6 /* SETOCryptorV3.h in Headers */,
+				74C5664425C8376300F3768B /* SETOSecureRandom.h in Headers */,
 				74CBDFA41C5834EF0055121F /* SETOCryptor.h in Headers */,
 				74941E332329397900E307D6 /* NSData+SETOBase64urlEncoding.h in Headers */,
 				74CBDF7B1C58342F0055121F /* SETOCryptomatorCryptor.h in Headers */,
 				74CBDFB81C5834F70055121F /* sha256.h in Headers */,
 				74CBDFB91C5834F70055121F /* sysendian.h in Headers */,
 				74CBDFB61C5834F70055121F /* crypto_scrypt.h in Headers */,
+				74D4E7EC25C33B7400E04767 /* SETOMasterKeyFile.h in Headers */,
 				74CBDFA11C5834EF0055121F /* SETOAesSivCipherUtil.h in Headers */,
 				74E9382A1EF8746B0031FC29 /* SETOCryptorV6.h in Headers */,
 				74CBDFA71C5834EF0055121F /* SETOCryptoSupport.h in Headers */,
@@ -350,7 +366,6 @@
 				74941E2F232924E200E307D6 /* SETOCryptorV7.h in Headers */,
 				74C6B5B6205BCFB0000F04F9 /* insecure_memzero.h in Headers */,
 				74CBDFA21C5834EF0055121F /* SETOAsyncCryptor.h in Headers */,
-				74A9FE8E1D1C0714000399B6 /* SETOCryptorProvider.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,7 +416,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = SETO;
-				LastUpgradeCheck = 1030;
+				LastUpgradeCheck = 1240;
 				ORGANIZATIONNAME = Skymatic;
 				TargetAttributes = {
 					74CBDF761C58342F0055121F = {
@@ -478,14 +493,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				74E9382B1EF8746B0031FC29 /* SETOCryptorV6.m in Sources */,
+				74C5664525C8376300F3768B /* SETOSecureRandom.m in Sources */,
 				74E938311EF87A710031FC29 /* SETOCryptorV4.m in Sources */,
 				74CBDFA01C5834EF0055121F /* SETOAesSivCipherUtil.c in Sources */,
+				74D4E7ED25C33B7400E04767 /* SETOMasterKeyFile.m in Sources */,
 				74A9FE811D1AD5C2000399B6 /* SETOCryptorV3.m in Sources */,
 				74941E30232924E200E307D6 /* SETOCryptorV7.m in Sources */,
 				74CBDFA31C5834EF0055121F /* SETOAsyncCryptor.m in Sources */,
 				74CBDFA51C5834EF0055121F /* SETOCryptor.m in Sources */,
 				74CBDFA61C5834EF0055121F /* SETOCryptoSupport.c in Sources */,
-				74A9FE8F1D1C0714000399B6 /* SETOCryptorProvider.m in Sources */,
 				74CBDFA91C5834EF0055121F /* SETOMasterKey.m in Sources */,
 				74C6B5B7205BCFB0000F04F9 /* insecure_memzero.c in Sources */,
 				74CBDFAD1C5834F30055121F /* e_aeswrap.c in Sources */,
@@ -501,7 +517,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				747C75621D79D33A002EAD3B /* SETOCryptorV5Tests.m in Sources */,
-				74345BF41D86D666003B96C5 /* SETOCryptorProviderTests.m in Sources */,
+				74C5663925C7FCBC00F3768B /* SETOMasterKeyTests.m in Sources */,
+				74D4E7F525C46E7400E04767 /* SETOMasterKeyFileTests.m in Sources */,
+				74B7813225C95B1900F266C8 /* SETOSecureRandomMock.m in Sources */,
 				749BD1CC232BBAE2005AE472 /* SETOCryptorV7Tests.m in Sources */,
 				74CBDFBB1C58350C0055121F /* SETOAesSivCipherUtilTests.m in Sources */,
 				74CBDF871C58342F0055121F /* SETOCryptorV3Tests.m in Sources */,
@@ -542,6 +560,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -600,6 +619,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

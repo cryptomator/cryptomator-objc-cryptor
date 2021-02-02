@@ -7,9 +7,9 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "SETOCryptor.h"
-#import "SETOCryptorProvider.h"
+#import "SETOCryptorV3.h"
 #import "SETOMasterKey.h"
+#import "SETOMasterKeyFile.h"
 
 @interface SETOCryptorV3Tests : XCTestCase
 @property (nonatomic, strong) SETOCryptor *cryptor;
@@ -22,13 +22,15 @@
 	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"3cKOp+YKt64=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"yAIFYioq0cac6mHDBczjfbjuhSfeEIHFtGpcoR7fQ6h/LlQERnQXzQ==\",\"hmacMasterKey\":\"eSBguTyeLjddkIlyy1gp5zLagKiUUUjxaxUGaX1IeDu1SWEpAPymqQ==\"}";
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:masterKeyFileContents];
+	XCTAssertNotNil(masterKeyFile);
 
 	NSError *error;
-	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:&error];
-	XCTAssertNotNil(self.cryptor);
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:3 error:&error];
+	XCTAssertNotNil(masterKey);
 	XCTAssertNil(error);
+
+	self.cryptor = [[SETOCryptorV3 alloc] initWithMasterKey:masterKey];
 }
 
 #pragma mark - Authentication
@@ -97,34 +99,6 @@
 }
 
 #pragma mark - Decryption
-
-- (void)testMasterKeyDecryption {
-	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"3cKOp+YKt64=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"yAIFYioq0cac6mHDBczjfbjuhSfeEIHFtGpcoR7fQ6h/LlQERnQXzQ==\",\"hmacMasterKey\":\"eSBguTyeLjddkIlyy1gp5zLagKiUUUjxaxUGaX1IeDu1SWEpAPymqQ==\"}";
-	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
-
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" error:nil]);
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" error:nil]);
-}
-
-- (void)testMasterKeyDecryptionWithPepper {
-	NSString *masterKeyFileContentsStr = @"{\"version\":3,\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"jkF3rc0WQsntEMlvXSLkquBLPlSYfOUDXDg90VHcj6irG4X/TOGJhA==\",\"hmacMasterKey\":\"jkF3rc0WQsntEMlvXSLkquBLPlSYfOUDXDg90VHcj6irG4X/TOGJhA==\",\"versionMac\":\"iUmRRHITuyJsJbVNqGNw+82YQ4A3Rma7j/y1v0DCVLA=\"}";
-	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
-
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-
-	unsigned char pepperBuffer[1] = {0x01};
-	NSData *pepper = [NSData dataWithBytes:pepperBuffer length:1];
-	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" pepper:pepper error:nil]);
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" pepper:pepper error:nil]);
-
-	unsigned char invalidPepperBuffer[1] = {0x02};
-	NSData *invalidPepper = [NSData dataWithBytes:invalidPepperBuffer length:1];
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asd" pepper:invalidPepper error:nil]);
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"asdf" pepper:invalidPepper error:nil]);
-}
 
 - (void)testDecryption {
 	XCTestExpectation *decryptionFinished = [self expectationWithDescription:@"decryption of file finished"];
@@ -198,10 +172,10 @@
 
 - (void)testEncryptionAndDecryptionWithNewMasterKey {
 	// create key:
-	SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
-	XCTAssertNotNil(cryptor);
-	SETOMasterKey *key = [cryptor masterKeyWithPassword:@"asd"];
+	SETOMasterKey *key = [[SETOMasterKey alloc] init];
 	XCTAssertNotNil(key);
+	SETOCryptor *cryptor = [[SETOCryptorV3 alloc] initWithMasterKey:key];
+	XCTAssertNotNil(cryptor);
 
 	// encrypt:
 	XCTestExpectation *encryptionFinished = [self expectationWithDescription:@"encryption of file finished"];

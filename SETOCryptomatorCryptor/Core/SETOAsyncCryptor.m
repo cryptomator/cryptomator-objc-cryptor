@@ -20,7 +20,7 @@
 - (instancetype)initWithCryptor:(SETOCryptor *)cryptor queue:(dispatch_queue_t)queue {
 	NSParameterAssert(cryptor);
 	NSParameterAssert(queue);
-	if (self = [super initWithPrimaryMasterKey:nil macMasterKey:nil version:cryptor.version]) {
+	if (self = [super initWithMasterKey:nil]) {
 		self.cryptor = cryptor;
 		self.queue = queue;
 	}
@@ -31,10 +31,6 @@
 	dispatch_queue_attr_t qosAttribute = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0);
 	dispatch_queue_t queue = dispatch_queue_create("org.cryptomator.SETOAsyncCryptorQueue", qosAttribute);
 	return [self initWithCryptor:cryptor queue:queue];
-}
-
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
-	return [self.cryptor masterKeyWithPassword:password pepper:pepper];
 }
 
 #pragma mark - Path Encryption and Decryption
@@ -106,12 +102,12 @@
 
 #pragma mark - Chunk Sizes
 
-- (NSUInteger)cleartextChunkSize {
-	return [self.cryptor cleartextChunkSize];
+- (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize {
+	return [self.cryptor ciphertextSizeFromCleartextSize:cleartextSize];
 }
 
-- (NSUInteger)ciphertextChunkSize {
-	return [self.cryptor ciphertextChunkSize];
+- (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize {
+	return [self.cryptor cleartextSizeFromCiphertextSize:ciphertextSize];
 }
 
 @end

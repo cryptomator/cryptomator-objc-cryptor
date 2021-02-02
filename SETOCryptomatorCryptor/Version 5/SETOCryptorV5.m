@@ -7,12 +7,12 @@
 //
 
 #import "SETOCryptorV5.h"
+#import "SETOMasterKey.h"
 
 #import "SETOCryptoSupport.h"
 
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
-#import <Security/Security.h>
 #import <openssl/evp.h>
 
 #pragma mark -
@@ -24,8 +24,7 @@ int const kSETOCryptorV5HeaderPayloadLength = 40;
 int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 
 @interface SETOCryptorV5 ()
-@property (nonatomic, copy) NSData *primaryMasterKey;
-@property (nonatomic, copy) NSData *macMasterKey;
+@property (nonatomic, strong) SETOMasterKey *masterKey;
 @end
 
 @implementation SETOCryptorV5
@@ -79,7 +78,7 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
-		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
+		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.masterKey.aesMasterKey.bytes, iv);
 		int bytesEncrypted = 0;
 		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, cleartextHeaderPayload, kSETOCryptorV5HeaderPayloadLength);
 		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptorV5HeaderPayloadLength) {
@@ -92,7 +91,7 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 
 	// calculate mac over file header:
 	CCHmacContext headerHmacContext;
-	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 	CCHmacUpdate(&headerHmacContext, header, 56);
 	CCHmacFinal(&headerHmacContext, &header[56]);
 
@@ -158,7 +157,7 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 		CCHmacContext chunkHmacContext;
-		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 		CCHmacUpdate(&chunkHmacContext, iv, 16);
 		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
 		CCHmacUpdate(&chunkHmacContext, nonce, 16);
@@ -232,7 +231,7 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
-		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
+		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.masterKey.aesMasterKey.bytes, iv);
 		int bytesDecrypted = 0;
 		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptorV5HeaderPayloadLength);
 		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptorV5HeaderPayloadLength) {
@@ -324,6 +323,32 @@ int const kSETOCryptorV5ChunkPayloadLength = 32 * 1024;
 		progressCallback(1.0);
 	}
 	callback(nil);
+}
+
+#pragma mark - File Size Calculation
+
+- (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize {
+	NSUInteger cleartextChunkSize = kSETOCryptorV5ChunkPayloadLength;
+	NSUInteger ciphertextChunkSize = kSETOCryptorV5NonceLength + cleartextChunkSize + CC_SHA256_DIGEST_LENGTH;
+	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
+	NSUInteger numFullChunks = cleartextSize / cleartextChunkSize; // floor by int-truncation
+	NSUInteger additionalCleartextBytes = cleartextSize % cleartextChunkSize;
+	NSUInteger additionalCiphertextBytes = (additionalCleartextBytes == 0) ? 0 : additionalCleartextBytes + overheadPerChunk;
+	return ciphertextChunkSize * numFullChunks + additionalCiphertextBytes;
+}
+
+- (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize {
+	NSUInteger cleartextChunkSize = kSETOCryptorV5ChunkPayloadLength;
+	NSUInteger ciphertextChunkSize = kSETOCryptorV5NonceLength + cleartextChunkSize + CC_SHA256_DIGEST_LENGTH;
+	NSUInteger overheadPerChunk = ciphertextChunkSize - cleartextChunkSize;
+	NSUInteger numFullChunks = ciphertextSize / ciphertextChunkSize; // floor by int-truncation
+	NSUInteger additionalCiphertextBytes = ciphertextSize % ciphertextChunkSize;
+	if (additionalCiphertextBytes > 0 && additionalCiphertextBytes <= overheadPerChunk) {
+		NSLog(@"-[SETOCryptor cleartextSizeFromCiphertextSize:] not defined for input value %tu", ciphertextSize);
+		return NSUIntegerMax;
+	}
+	NSUInteger additionalCleartextBytes = (additionalCiphertextBytes == 0) ? 0 : additionalCiphertextBytes - overheadPerChunk;
+	return cleartextChunkSize * numFullChunks + additionalCleartextBytes;
 }
 
 @end

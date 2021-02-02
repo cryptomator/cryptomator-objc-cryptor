@@ -12,31 +12,18 @@
 NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 
 @interface SETOCryptor ()
-@property (nonatomic, copy) NSData *primaryMasterKey;
-@property (nonatomic, copy) NSData *macMasterKey;
-@property (nonatomic, assign) SETOCryptorVersion version;
+@property (nonatomic, strong) SETOMasterKey *masterKey;
 @end
 
 @implementation SETOCryptor
 
 #pragma mark - Initialization
 
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version {
+- (instancetype)initWithMasterKey:(SETOMasterKey *)masterKey {
 	if (self = [super init]) {
-		self.primaryMasterKey = primaryMasterKey;
-		self.macMasterKey = macMasterKey;
-		self.version = version;
+		self.masterKey = masterKey;
 	}
 	return self;
-}
-
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password {
-	return [self masterKeyWithPassword:password pepper:nil];
-}
-
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
-	NSAssert(NO, @"Overwrite this method.");
-	return nil;
 }
 
 #pragma mark - Path Encryption and Decryption
@@ -70,14 +57,14 @@ NSString *const kSETOCryptorErrorDomain = @"SETOCryptorErrorDomain";
 	NSAssert(NO, @"Overwrite this method.");
 }
 
-#pragma mark - Chunk Sizes
+#pragma mark - File Size Calculation
 
-- (NSUInteger)cleartextChunkSize {
+- (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize {
 	NSAssert(NO, @"Overwrite this method.");
 	return NSUIntegerMax;
 }
 
-- (NSUInteger)ciphertextChunkSize {
+- (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize {
 	NSAssert(NO, @"Overwrite this method.");
 	return NSUIntegerMax;
 }

@@ -29,62 +29,110 @@ The easiest way to use SETOCryptomatorCryptor in your app is via [CocoaPods](htt
 
 ## Usage
 
-### SETOCryptorProvider
+### SETOMasterKey
 
-`SETOCryptorProvider` is a factory for `SETOCryptor` objects. Always use the factory for creating `SETOCryptor` instances.
+`SETOMasterKey` is a class that only contains the key material for AES encryption/decryption and MAC authentication.
 
-#### Create New Cryptor & Master Key
+#### Constructor
+
+This will create a new master key with secure random bytes.
 
 ```objective-c
-NSString *password = ...;
-SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
-SETOMasterKey *masterKey = [cryptor masterKeyWithPassword:password];
+SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
 ```
 
-Actually, you should call these methods from a background thread, as random number generation will benefit from UI interaction.
+You should call the constructor from a background thread, as random number generation will benefit from UI interaction.
 
 ```objective-c
-NSString *password = ...;
 dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-  SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
-  SETOMasterKey *masterKey = [cryptor masterKeyWithPassword:password];
+  SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
   dispatch_async(dispatch_get_main_queue(), ^{
     // do the rest here
   });
 });
 ```
 
-#### Create Cryptor From Existing Master Key
+Another way is to create a master key from raw bytes.
 
-This is equivalent to an unlock attempt.
+```objective-c
+NSData *aesMasterKey = ...;
+NSData *macMasterKey = ...;
+SETOMasterKey *masterKey = [[SETOMasterKey alloc] initWithAESMasterKey:aesMasterKey macMasterKey:macMasterKey];
+```
+
+### SETOMasterKeyFile
+
+`SETOMasterKeyFile` is a representation of the master key file. With that, you can unlock a master key file (and get a `SETOMasterKey`) or lock a master key file (and serialize it as JSON).
+
+#### Constructor
+
+Create a master key file with content provided from JSON data:
+
+```objective-c
+NSData *jsonData = ...;
+SETOMasterKeyFile *masterkeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
+```
+
+#### Unlock
+
+When you have a master key file, you can attempt an unlock. When successful, it unwraps the stored encryption and MAC keys into the master key, which can be used for the cryptor.
+
+```objective-c
+SETOMasterKeyFile *masterkeyFile = ...;
+NSString *passphrase = ...;
+NSData *pepper = ...; // optional
+NSInteger expectedVaultVersion = ...; // use NSNotFound if a version check should be skipped
+NSError *error;
+SETOMasterKey *masterKey = [masterkeyFile unlockWithPassphrase:passphrase pepper:pepper expectedVaultVersion:expectedVaultVersion error:&error];
+```
+
+#### Lock
+
+For persisting the master key, use this method to export its encrypted/wrapped master key and other metadata as JSON data.
 
 ```objective-c
 SETOMasterKey *masterKey = ...;
+NSInteger vaultVersion = ...;
+NSString *passphrase = ...;
+NSData *pepper = ...; // optional
+uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaulScryptCostParam if you are not sure
 NSError *error;
-SETOCryptor *cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:password error:&error];
-if (error) {
-  NSLog(@"Unlock Error: %@", error);
-} else {
-  NSLog(@"Unlock Success");
-}
+NSData *jsonData = [SETOMasterKeyFile lockMasterKey:masterKey withVaultVersion:vaultVersion passphrase:passphrase pepper:pepper scryptCostParam:scryptCostParam error:&error];
 ```
 
-#### Determine File Sizes
-
-Beginning with vault version 5, you can determine the cleartext and ciphertext sizes in O(1). Reading out the file sizes before vault version 5 is theoretically possible, but not supported by this library.
+You should call the lock method from a background thread, as random number generation will benefit from UI interaction.
 
 ```objective-c
-SETOCryptor *cryptor = ...;
-NSUInteger ciphertextSize = ...;
-NSUInteger cleartextSize = [SETOCryptorProvider cleartextSizeFromCiphertextSize:ciphertextSize withCryptor:cryptor];
-// and the other way round with +[SETOCryptorProvider ciphertextSizeFromCleartextSize:withCryptor:]
+dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+  SETOMasterKey *masterKey = ...;
+  NSInteger vaultVersion = ...;
+  NSString *passphrase = ...;
+  NSData *pepper = ...; // optional
+  uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaulScryptCostParam if you are not sure
+  NSError *error;
+  NSData *jsonData = [SETOMasterKeyFile lockMasterKey:masterKey withVaultVersion:vaultVersion passphrase:passphrase pepper:pepper scryptCostParam:scryptCostParam error:&error];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    // do the rest here
+  });
+});
 ```
 
 ### SETOCryptor
 
-`SETOCryptor` is the core class for cryptographic operations on Cryptomator vaults. This is an abstract class, so you should use `SETOCryptorProvider` to create a `SETOCryptor` instance.
+`SETOCryptor` is the core class for cryptographic operations on Cryptomator vaults. This is an abstract class, so you should use the version-specific subclasses like `SETOCryptorV7` to create a `SETOCryptor` instance.
+
+#### Constructor
+
+Create a cryptor by providing a masterkey.
+
+```objective-c
+SETOMasterKey *masterKey = ...;
+SETOCryptor *cryptor = [[SETOCryptorV7 alloc] initWithMasterKey:masterKey];
+```
 
 #### Directory ID Encryption
+
+Encrypt the directory ID in order to determine the encrypted directory URL.
 
 ```objective-c
 SETOCryptor *cryptor = ...;
@@ -93,6 +141,8 @@ NSString *encryptedDirectoryId = [cryptor encryptDirectoryId:directoryId];
 ```
 
 #### Filename Encryption and Decryption
+
+Encrypt and decrypt filenames by providing a directory ID.
 
 ```objective-c
 SETOCryptor *cryptor = ...;
@@ -103,6 +153,8 @@ NSString *decryptedFilename = [cryptor decryptFilename:encryptedFilename insideD
 ```
 
 #### File Content Authentication
+
+Authenticate file content to verify its integrity.
 
 ```objective-c
 SETOCryptor *cryptor = ...;
@@ -119,6 +171,8 @@ NSString *ciphertextFilePath = ...;
 ```
 
 #### File Content Encryption
+
+Encrypt file content via paths.
 
 ```objective-c
 SETOCryptor *cryptor = ...;
@@ -137,6 +191,8 @@ NSString *ciphertextFilePath = ...;
 
 #### File Content Decryption
 
+Decrypt file content via paths.
+
 ```objective-c
 SETOCryptor *cryptor = ...;
 NSString *ciphertextFilePath = ...;
@@ -152,15 +208,22 @@ NSString *cleartextFilePath = ...;
 }];
 ```
 
+#### File Size Calculation
+
+Beginning with vault version 5, you can determine the cleartext and ciphertext sizes in O(1). Reading out the file sizes before vault version 5 is theoretically possible, but not supported by this library.
+
+```objective-c
+SETOCryptor *cryptor = ...;
+NSUInteger size = ...;
+NSUInteger ciphertextSize = [cryptor ciphertextSizeFromCleartextSize:size];
+NSUInteger cleartextSize = [cryptor cleartextSizeFromCiphertextSize:ciphertextSize];
+```
+
 ### SETOAsyncCryptor
 
 `SETOAsyncCryptor` is a `SETOCryptor` decorator for running file content encryption and decryption operations asynchronously. It's useful for cryptographic operations on large files without blocking the main thread.
 
 Create and initialize `SETOAsyncCryptor` using `initWithCryptor:queue:` to specify a dispatch queue. If you're initializing with the convenience initializer `initWithCryptor:`, a serial queue (utility QoS class) will be created and used.
-
-### SETOMasterKey
-
-`SETOMasterKey` holds the information necessary for the master key. All properties are immutable to prevent accidental changes. Use `updateFromJsonData:` or `updateFromDictionary:` to modify the properties in bulk. Use the convenience method `dictionaryRepresentation`, e.g. for persisting the master key.
 
 ## Contributing to Cryptomator
 

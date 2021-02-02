@@ -17,7 +17,7 @@
  *  Creates and initializes a @c SETOAsyncCryptor object decorating the specified cryptor. The specified dispatch queue will be used for succeeding file content encryption and decryption operations.
  *
  *  @param cryptor The cryptor to decorate.
- *  @param queue The dispatch queue on which succeeding file content encryption and decryption operations will run.
+ *  @param queue   The dispatch queue on which succeeding file content encryption and decryption operations will run.
  *
  *  @return The newly-initialized async cryptor.
  */
@@ -37,6 +37,6 @@
  *
  *  @see -initWithCryptor:queue:
  */
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version NS_UNAVAILABLE;
+- (instancetype)initWithMasterKey:(SETOMasterKey *)masterKey NS_UNAVAILABLE;
 
 @end

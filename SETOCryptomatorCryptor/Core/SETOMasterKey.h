@@ -8,50 +8,26 @@
 
 #import <Foundation/Foundation.h>
 
-@class SETOCryptor;
-
-extern NSString *const kSETOMasterKeyVersionKey;
-extern NSString *const kSETOMasterKeyVersionMacKey;
-extern NSString *const kSETOMasterKeyScryptSaltKey;
-extern NSString *const kSETOMasterKeyScryptCostParamKey;
-extern NSString *const kSETOMasterKeyScryptBlockSizeKey;
-extern NSString *const kSETOMasterKeyPrimaryMasterKeyKey;
-extern NSString *const kSETOMasterKeyMacMasterKeyKey;
-
-/**
- *  @c SETOMasterKey holds the information necessary for the master key.
- */
 @interface SETOMasterKey : NSObject
 
-@property (nonatomic, readonly) uint32_t version;
-@property (nonatomic, readonly) NSData *versionMac;
-@property (nonatomic, readonly) NSData *scryptSalt;
-@property (nonatomic, readonly) uint64_t scryptCostParam;
-@property (nonatomic, readonly) uint32_t scryptBlockSize;
-@property (nonatomic, readonly) NSData *primaryMasterKey;
+@property (nonatomic, readonly) NSData *aesMasterKey;
 @property (nonatomic, readonly) NSData *macMasterKey;
 
 /**
- *  Creates a dictionary representation of this master key.
+ *  Creates masterkey from raw bytes.
+ *
+ *  @param aesMasterKey Key used for encryption of file specific keys.
+ *  @param macMasterKey Key used for file authentication.
+ *
+ *  @return New masterkey instance using the keys from the supplied raw bytes.
  */
-@property (nonatomic, readonly, getter=dictionaryRepresentation) NSDictionary *dictionaryRepresentation;
+- (instancetype)initWithAESMasterKey:(NSData *)aesMasterKey macMasterkey:(NSData *)macMasterKey;
 
 /**
- *  Updates master key from specified JSON data.
+ *  Creates new masterkey.
  *
- *  @param jsonData The master key data in JSON format.
- *
- *  @return @c YES, if the master key has been successfully updated, otherwise @c NO.
+ *  @return New masterkey instance with secure random bytes.
  */
-- (BOOL)updateFromJSONData:(NSData *)jsonData;
-
-/**
- *  Updates master key from specified dictionary.
- *
- *  @param dictionary The master key data as dictionary.
- *
- *  @return @c YES, if the master key has been successfully updated, otherwise @c NO.
- */
-- (BOOL)updateFromDictionary:(NSDictionary *)dictionary;
+- (instancetype)init;
 
 @end

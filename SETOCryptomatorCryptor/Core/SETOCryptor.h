@@ -18,14 +18,6 @@ typedef NS_ENUM(NSInteger, SETOCryptorError) {
 	SETOCryptorDecryptionFailedError
 };
 
-typedef NS_ENUM(NSInteger, SETOCryptorVersion) {
-	SETOCryptorVersion3 = 3,
-	SETOCryptorVersion4 = 4,
-	SETOCryptorVersion5 = 5,
-	SETOCryptorVersion6 = 6,
-	SETOCryptorVersion7 = 7
-};
-
 typedef void (^SETOCryptorCompletionCallback)(NSError *error);
 typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
 
@@ -36,49 +28,26 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 @interface SETOCryptor : NSObject
 
-@property (nonatomic, readonly) SETOCryptorVersion version;
-
 /**---------------------
  *  @name Initialization
  *----------------------
  */
 
 /**
- *  Creates and initializes a @c SETOCryptor object with the specified primary master key and mac master key.
+ *  Creates and initializes a @c SETOCryptor object with the specified master key.
  *
- *  @param primaryMasterKey The primary master key.
- *  @param macMasterKey     The MAC master key.
- *  @param version          The cryptor version.
+ *  @param masterKey The master key.
  *
  *  @return The newly-initialized cryptor.
  */
-- (instancetype)initWithPrimaryMasterKey:(NSData *)primaryMasterKey macMasterKey:(NSData *)macMasterKey version:(SETOCryptorVersion)version NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithMasterKey:(SETOMasterKey *)masterKey NS_DESIGNATED_INITIALIZER;
 
 /**
- *  Unavailable initialization method, use -initWithPrimaryMasterKey:macMasterKey: instead.
+ *  Unavailable initialization method, use -initWithMasterKey: instead.
  *
- *  @see -initWithPrimaryMasterKey:macMasterKey:
+ *  @see -initWithMasterKey:
  */
 - (instancetype)init NS_UNAVAILABLE;
-
-/**
- *  Creates a @c SETOMasterKey object with the specified password.
- *
- *  @param password The user-assigned password from which the keys will be derived.
- *
- *  @return The newly-initialized master key.
- */
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password;
-
-/**
- *  Creates a @c SETOMasterKey object with the specified password and pepper.
- *
- *  @param password The user-assigned password from which the keys will be derived.
- *  @param pepper   An application-specific pepper added to the salt during key derivation (if applicable).
- *
- *  @return The newly-initialized master key.
- */
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper;
 
 /**-------------------------------------
  *  @name Path Encryption and Decryption
@@ -86,31 +55,31 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 
 /**
- *  Encrypts the specified cleartext directory id and returns the result.
+ *  Encrypts directory ID.
  *
- *  @param directoryId The cleartext directory id that is going to be encrypted.
+ *  @param directoryId An arbitrary directory ID to be passed to one-way hash function.
  *
- *  @return The encrypted directory id.
+ *  @return Constant length string that is unlikely to collide with any other name.
  */
 - (NSString *)encryptDirectoryId:(NSString *)directoryId;
 
 /**
- *  Encrypts the specified cleartext filename inside given directory with id and returns the result.
+ *  Encrypts filename.
  *
- *  @param filename The cleartext filename that is going to be encrypted.
- *  @param directoryId The cleartext directory id.
+ *  @param filename    Original filename including cleartext file extension.
+ *  @param directoryId Directory ID that will be used as associated data. It will not get encrypted but needs to be provided during decryption.
  *
- *  @return The encrypted filename.
+ *  @return Encrypted filename without any file extension.
  */
 - (NSString *)encryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId;
 
 /**
- *  Decrypts the specified ciphertext filename inside given directory with id and returns the result.
+ *  Decrypts filename.
  *
- *  @param filename The ciphertext filename that is going to be decrypted.
- *  @param directoryId The cleartext directory id.
+ *  @param filename    Ciphertext only. Any additional strings like file extensions need to be stripped first.
+ *  @param directoryId The same directed ID used during encryption as associated data.
  *
- *  @return The decrypted filename.
+ *  @return Decrypted filename, probably including its cleartext file extension.
  */
 - (NSString *)decryptFilename:(NSString *)filename insideDirectoryWithId:(NSString *)directoryId;
 
@@ -120,47 +89,55 @@ typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
  */
 
 /**
- *  Authenticate file at given path.
+ *  Authenticate file content.
  *
- *  @param path             The path of an encrypted file.
+ *  @param path             The path of a ciphertext file.
  *  @param callback         A block object to be executed when file authentication completes. This block has no return value and takes one argument: The error object describing the file authentication error that occurred, otherwise it's @p nil.
  *  @param progressCallback A block object to be executed for every chunk that has been successfully authenticated. This block has no return value and takes one argument: The progress value between @p 0.0 and @p 1.0.
  */
 - (void)authenticateFileAtPath:(NSString *)path callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback;
 
 /**
- *  Encrypt file at given path to output path.
+ *  Encrypts file content.
  *
- *  @param inPath           The input path of a file.
- *  @param outPath          The output path of the encrypted file.
+ *  @param inPath           The input path of a cleartext file.
+ *  @param outPath          The output path of the ciphertext file.
  *  @param callback         A block object to be executed when file encryption completes. This block has no return value and takes one argument: The error object describing the file encryption error that occurred, otherwise it's @p nil.
  *  @param progressCallback A block object to be executed for every chunk that has been successfully encrypted. This block has no return value and takes one argument: The progress value between @p 0.0 and @p 1.0.
  */
 - (void)encryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback;
 
 /**
- *  Decrypt file at given path to output path.
+ *  Decrypts file content.
  *
- *  @param inPath           The input path of an encrypted file.
- *  @param outPath          The output path of the decrypted file.
+ *  @param inPath           The input path of a ciphertext file.
+ *  @param outPath          The output path of the cleartext file.
  *  @param callback         A block object to be executed when file decryption completes. This block has no return value and takes one argument: The error object describing the file decryption error that occurred, otherwise it's @p nil.
  *  @param progressCallback A block object to be executed for every chunk that has been successfully decrypted. This block has no return value and takes one argument: The progress value between @p 0.0 and @p 1.0.
  */
 - (void)decryptFileAtPath:(NSString *)inPath toPath:(NSString *)outPath callback:(SETOCryptorCompletionCallback)callback progress:(SETOCryptorProgressCallback)progressCallback;
 
-/**------------------
- *  @name Chunk Sizes
- *-------------------
+/**----------------------------
+ *  @name File Size Calculation
+ *-----------------------------
  */
 
 /**
- *  @return The number of cleartext bytes per chunk.
+ *  Calculates ciphertext size from cleartext size.
+ *
+ *  @param cleartextSize Size of the unencrypted payload.
+ *
+ *  @return Ciphertext size of a @p cleartextSize -sized cleartext encrypted with this cryptor. Not including the file header.
  */
-- (NSUInteger)cleartextChunkSize;
+- (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize;
 
 /**
- *  @return The number of ciphertext bytes per chunk.
+ *  Calculates ciphertext size from cleartext size.
+ *
+ *  @param ciphertextSize Size of the encrypted payload. Not including the file header.
+ *
+ *  @return Cleartext size of a @p ciphertextSize -sized ciphertext decrypted with this cryptor.
  */
-- (NSUInteger)ciphertextChunkSize;
+- (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize;
 
 @end

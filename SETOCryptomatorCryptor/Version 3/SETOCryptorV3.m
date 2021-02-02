@@ -14,30 +14,10 @@
 
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
-#import <Security/Security.h>
 #import <Base32/MF_Base32Additions.h>
 #import <openssl/evp.h>
-#import "e_aeswrap.h"
-#import "crypto_scrypt.h"
-
-// exposing SETOMasterKey's properties for direct mutation
-@interface SETOMasterKey ()
-@property (nonatomic, assign) uint32_t version;
-@property (nonatomic, strong) NSData *versionMac;
-@property (nonatomic, strong) NSData *scryptSalt;
-@property (nonatomic, assign) uint64_t scryptCostParam;
-@property (nonatomic, assign) uint32_t scryptBlockSize;
-@property (nonatomic, strong) NSData *primaryMasterKey;
-@property (nonatomic, strong) NSData *macMasterKey;
-@end
-
-#pragma mark -
 
 size_t const kSETOCryptorV3BlockSize = 16;
-int const kSETOCryptorV3KeyLength = 32; // 256 bit
-int const kSETOCryptorV3DefaultScryptSaltLength = 8;
-uint64_t const kSETOCryptorV3DefaulScryptCostParam = 32768; // 2^15
-uint32_t const kSETOCryptorV3DefaultScryptBlockSize = 8;
 int const kSETOCryptorV3NonceLength = 16;
 int const kSETOCryptorV3HeaderLength = 88;
 int const kSETOCryptorV3HeaderPayloadLength = 40;
@@ -45,73 +25,10 @@ int const kSETOCryptorV3ChunkPayloadLength = 32 * 1024;
 NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2-7=]{8}$";
 
 @interface SETOCryptorV3 ()
-@property (nonatomic, copy) NSData *primaryMasterKey;
-@property (nonatomic, copy) NSData *macMasterKey;
+@property (nonatomic, strong) SETOMasterKey *masterKey;
 @end
 
 @implementation SETOCryptorV3
-
-#pragma mark - Initialization
-
-- (SETOMasterKey *)masterKeyWithPassword:(NSString *)password pepper:(NSData *)pepper {
-	if ([NSThread isMainThread]) {
-		NSLog(@"Warning: -[SETOCryptor masterKeyWithPassword:pepper:] should be called from a background thread, as random number generation will benefit from UI interaction.");
-	}
-
-	// create random bytes for scrypt salt:
-	unsigned char saltBuffer[kSETOCryptorV3DefaultScryptSaltLength];
-	if (SecRandomCopyBytes(kSecRandomDefault, sizeof(saltBuffer), saltBuffer) == -1) {
-		NSLog(@"Unable to create random bytes for salt.");
-		return nil;
-	}
-	NSData *salt = [NSData dataWithBytes:saltBuffer length:sizeof(saltBuffer)];
-
-	// add pepper bytes to scrypt salt:
-	unsigned char saltAndPepperBuffer[sizeof(saltBuffer) + pepper.length];
-	memcpy(&saltAndPepperBuffer[0], saltBuffer, sizeof(saltBuffer));
-	memcpy(&saltAndPepperBuffer[8], pepper.bytes, pepper.length);
-	NSData *saltAndPepper = [NSData dataWithBytes:saltAndPepperBuffer length:sizeof(saltAndPepperBuffer)];
-
-	// scrypt key derivation:
-	NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-	unsigned char kekBytes[kSETOCryptorV3KeyLength];
-	crypto_scrypt(passwordData.bytes, passwordData.length, saltAndPepper.bytes, saltAndPepper.length, kSETOCryptorV3DefaulScryptCostParam, kSETOCryptorV3DefaultScryptBlockSize, 1, kekBytes, sizeof(kekBytes));
-
-	// key wrapping:
-	const EVP_CIPHER *cipher = EVP_aes_256_ecb();
-	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
-	EVP_EncryptInit_ex(&ctx, cipher, NULL, kekBytes, NULL);
-	unsigned char wrappedPrimaryMasterKeyBuffer[kSETOCryptorV3KeyLength + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedPrimaryMasterKeyBuffer, self.primaryMasterKey.bytes, (unsigned int)self.primaryMasterKey.length);
-	NSData *wrappedPrimaryMasterKey = [NSData dataWithBytes:wrappedPrimaryMasterKeyBuffer length:sizeof(wrappedPrimaryMasterKeyBuffer)];
-	unsigned char wrappedMacMasterKeyBuffer[kSETOCryptorV3KeyLength + 8];
-	EVP_aes_wrap_key(&ctx, NULL, wrappedMacMasterKeyBuffer, self.macMasterKey.bytes, (unsigned int)self.macMasterKey.length);
-	NSData *wrappedMacMasterKey = [NSData dataWithBytes:wrappedMacMasterKeyBuffer length:sizeof(wrappedMacMasterKeyBuffer)];
-	EVP_CIPHER_CTX_cleanup(&ctx);
-
-	// calculate mac over version:
-	unsigned char versionMac[CC_SHA256_DIGEST_LENGTH];
-	unsigned char versionBytes[sizeof(uint32_t)] = {0};
-	int_to_big_endian_bytes((uint32_t)self.version, versionBytes);
-	CCHmacContext versionHmacContext;
-	CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, (size_t)self.macMasterKey.length);
-	CCHmacUpdate(&versionHmacContext, versionBytes, sizeof(versionBytes));
-	CCHmacFinal(&versionHmacContext, &versionMac);
-
-	// master key assembly:
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	masterKey.version = (uint32_t)self.version;
-	masterKey.versionMac = [NSData dataWithBytes:versionMac length:sizeof(versionMac)];
-	masterKey.scryptSalt = salt;
-	masterKey.scryptCostParam = kSETOCryptorV3DefaulScryptCostParam;
-	masterKey.scryptBlockSize = kSETOCryptorV3DefaultScryptBlockSize;
-	masterKey.primaryMasterKey = wrappedPrimaryMasterKey;
-	masterKey.macMasterKey = wrappedMacMasterKey;
-
-	// done:
-	return masterKey;
-}
 
 #pragma mark - Path Encryption and Decryption
 
@@ -119,14 +36,14 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 	NSParameterAssert(directoryId);
 	NSData *cleartext = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	unsigned char *ciphertext = malloc(cleartext.length + 16);
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 0, NULL, NULL, ciphertext)) {
+	if (siv_enc(self.masterKey.aesMasterKey.bytes, self.masterKey.macMasterKey.bytes, self.masterKey.aesMasterKey.length, cleartext.bytes, cleartext.length, 0, NULL, NULL, ciphertext)) {
 		free(ciphertext);
 		return nil;
 	}
 	unsigned char hashed[CC_SHA1_DIGEST_LENGTH];
 	CC_SHA1(ciphertext, (CC_LONG)cleartext.length + 16, hashed);
 	free(ciphertext);
-	NSData *ciphertextData = [NSData dataWithBytes:hashed length:CC_SHA1_DIGEST_LENGTH];
+	NSData *ciphertextData = [NSData dataWithBytes:hashed length:sizeof(hashed)];
 	return [ciphertextData base32String];
 }
 
@@ -137,7 +54,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
 	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_enc(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, cleartext.bytes, cleartext.length, 1, additionalData, additionalDataSizes, ciphertext)) {
+	if (siv_enc(self.masterKey.aesMasterKey.bytes, self.masterKey.macMasterKey.bytes, self.masterKey.aesMasterKey.length, cleartext.bytes, cleartext.length, 1, additionalData, additionalDataSizes, ciphertext)) {
 		free(ciphertext);
 		return nil;
 	}
@@ -158,7 +75,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 	NSData *directoryIdData = [directoryId dataUsingEncoding:NSUTF8StringEncoding];
 	const unsigned char *additionalData[1] = {directoryIdData.bytes};
 	const size_t additionalDataSizes[1] = {directoryIdData.length};
-	if (siv_dec(self.primaryMasterKey.bytes, self.macMasterKey.bytes, self.primaryMasterKey.length, ciphertext.bytes, ciphertext.length, 1, additionalData, additionalDataSizes, cleartext)) {
+	if (siv_dec(self.masterKey.aesMasterKey.bytes, self.masterKey.macMasterKey.bytes, self.masterKey.aesMasterKey.length, ciphertext.bytes, ciphertext.length, 1, additionalData, additionalDataSizes, cleartext)) {
 		free(cleartext);
 		return nil;
 	}
@@ -224,7 +141,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 	// calculate mac over file header:
 	unsigned char calculatedHeaderMac[CC_SHA256_DIGEST_LENGTH];
 	CCHmacContext headerHmacContext;
-	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 	CCHmacUpdate(&headerHmacContext, header, 56); // 56 bytes: 16 bytes iv + 8 bytes file size + 32 bytes file key (without mac)
 	CCHmacFinal(&headerHmacContext, calculatedHeaderMac);
 
@@ -256,7 +173,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 
 		// calculate chunk mac:
 		CCHmacContext chunkHmacContext;
-		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 		CCHmacUpdate(&chunkHmacContext, iv, 16);
 		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
 		CCHmacUpdate(&chunkHmacContext, nonce, kSETOCryptorV3NonceLength);
@@ -338,7 +255,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
-		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
+		EVP_EncryptInit_ex(&ctx, ctrCipher, NULL, self.masterKey.aesMasterKey.bytes, iv);
 		int bytesEncrypted = 0;
 		int encryptStatus = EVP_EncryptUpdate(&ctx, ciphertextHeaderPayload, &bytesEncrypted, cleartextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
 		if (encryptStatus == 0 || bytesEncrypted != kSETOCryptorV3HeaderPayloadLength) {
@@ -351,7 +268,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 
 	// calculate mac over file header:
 	CCHmacContext headerHmacContext;
-	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+	CCHmacInit(&headerHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 	CCHmacUpdate(&headerHmacContext, header, 56);
 	CCHmacFinal(&headerHmacContext, &header[56]);
 
@@ -421,7 +338,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 		unsigned char chunkNumberBytes[sizeof(uint64_t)] = {0};
 		long_to_big_endian_bytes(chunkNumber, chunkNumberBytes);
 		CCHmacContext chunkHmacContext;
-		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.macMasterKey.bytes, self.macMasterKey.length);
+		CCHmacInit(&chunkHmacContext, kCCHmacAlgSHA256, self.masterKey.macMasterKey.bytes, self.masterKey.macMasterKey.length);
 		CCHmacUpdate(&chunkHmacContext, iv, 16);
 		CCHmacUpdate(&chunkHmacContext, chunkNumberBytes, sizeof(chunkNumberBytes));
 		CCHmacUpdate(&chunkHmacContext, nonce, 16);
@@ -486,7 +403,7 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 		EVP_CIPHER_CTX_set_padding(&ctx, 0);
-		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.primaryMasterKey.bytes, iv);
+		EVP_DecryptInit_ex(&ctx, ctrCipher, NULL, self.masterKey.aesMasterKey.bytes, iv);
 		int bytesDecrypted = 0;
 		int decryptStatus = EVP_DecryptUpdate(&ctx, cleartextHeaderPayload, &bytesDecrypted, ciphertextHeaderPayload, kSETOCryptorV3HeaderPayloadLength);
 		if (decryptStatus == 0 || bytesDecrypted != kSETOCryptorV3HeaderPayloadLength) {
@@ -583,14 +500,16 @@ NSString *const kSETOCryptorV3CiphertextFilenamePattern = @"^([A-Z2-7]{8})*[A-Z2
 	callback(nil);
 }
 
-#pragma mark - Chunk Sizes
+#pragma mark - File Size Calculation
 
-- (NSUInteger)cleartextChunkSize {
-	return kSETOCryptorV3ChunkPayloadLength;
+- (NSUInteger)ciphertextSizeFromCleartextSize:(NSUInteger)cleartextSize {
+	NSLog(@"-[SETOCryptor cleartextSizeFromCiphertextSize:] not defined for cryptor version 3 and 4");
+	return NSUIntegerMax;
 }
 
-- (NSUInteger)ciphertextChunkSize {
-	return kSETOCryptorV3NonceLength + kSETOCryptorV3ChunkPayloadLength + CC_SHA256_DIGEST_LENGTH;
+- (NSUInteger)cleartextSizeFromCiphertextSize:(NSUInteger)ciphertextSize {
+	NSLog(@"-[SETOCryptor cleartextSizeFromCiphertextSize:] not defined for cryptor version 3 and 4");
+	return NSUIntegerMax;
 }
 
 @end

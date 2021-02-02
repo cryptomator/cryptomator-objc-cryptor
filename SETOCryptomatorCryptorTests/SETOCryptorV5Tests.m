@@ -7,9 +7,9 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "SETOCryptor.h"
-#import "SETOCryptorProvider.h"
+#import "SETOCryptorV5.h"
 #import "SETOMasterKey.h"
+#import "SETOMasterKeyFile.h"
 
 @interface SETOCryptorV5Tests : XCTestCase
 @property (nonatomic, strong) SETOCryptor *cryptor;
@@ -22,55 +22,18 @@
 	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30g=\",\"version\":5}";
 	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
 
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
+	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:masterKeyFileContents];
+	XCTAssertNotNil(masterKeyFile);
 
 	NSError *error;
-	self.cryptor = [SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:&error];
-	XCTAssertNotNil(self.cryptor);
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"qwe" pepper:nil expectedVaultVersion:5 error:&error];
+	XCTAssertNotNil(masterKey);
 	XCTAssertNil(error);
-}
 
-- (void)testDifferentNormalizationFormsOfPassword {
-	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"xjkJmSgJ/zU=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"3BvylqppBfNQ+ZJNS+wRbSKutuHT3AGGIY3IT0yMzpSSBfS+pr6WIw==\",\"hmacMasterKey\":\"pienjdRNu5PY4ZY8sM/CwGMZGVZ4YmO4MjXwSYYEaiy13/Qm0NoAcA==\",\"versionMac\":\"8ArW2fJ4Tdi0NjqNPw+QngU3YLX009G7ZplJi+7kQxo=\",\"version\":5}";
-	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
-
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-
-	NSError *error1;
-	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error1]); // NFC + NFD
-	XCTAssertNil(error1);
-
-	NSError *error2;
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error2]); // NFC + NFC
-	XCTAssertEqual(error2.domain, kSETOCryptorProviderErrorDomain);
-	XCTAssertEqual(error2.code, SETOCryptorProviderInvalidPasswordError);
-
-	NSError *error3;
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error3]); // NFD + NFD
-	XCTAssertEqual(error3.domain, kSETOCryptorProviderErrorDomain);
-	XCTAssertEqual(error3.code, SETOCryptorProviderInvalidPasswordError);
-
-	NSError *error4;
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"țț" error:&error4]); // NFD + NFC
-	XCTAssertEqual(error4.domain, kSETOCryptorProviderErrorDomain);
-	XCTAssertEqual(error4.code, SETOCryptorProviderInvalidPasswordError);
+	self.cryptor = [[SETOCryptorV5 alloc] initWithMasterKey:masterKey];
 }
 
 #pragma mark - Authentication
-
-- (void)testUnauthenticMasterKeyVersion {
-	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30a=\",\"version\":5}";
-	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
-
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-	NSError *error;
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:&error]);
-	XCTAssertEqual(error.domain, kSETOCryptorProviderErrorDomain);
-	XCTAssertEqual(error.code, SETOCryptorProviderUnauthenticKeyVersionError);
-}
 
 - (void)testFileAuthentication {
 	XCTestExpectation *authentication1Finished = [self expectationWithDescription:@"authentication of authentic file finished"];
@@ -136,16 +99,6 @@
 }
 
 #pragma mark - Decryption
-
-- (void)testMasterKeyDecryption {
-	NSString *masterKeyFileContentsStr = @"{\"scryptSalt\":\"IQ3dNx9mQzk=\",\"scryptCostParam\":16384,\"scryptBlockSize\":8,\"primaryMasterKey\":\"FeOTDrO2fnm4vfjfsp8EirlWt+4VBeuUhLN23Ssq0QFvS8ZR2FNkbw==\",\"hmacMasterKey\":\"FRm3SD8K4ubsxP9PQVOi17WXbesKrp+mP4NnCQGED2aFTxr2bXd/Fw==\",\"versionMac\":\"VV80Uz49sJfQ9o+evVj4AtBs2scg4PbKx3ZgMp6o30g=\",\"version\":5}";
-	NSData *masterKeyFileContents = [masterKeyFileContentsStr dataUsingEncoding:NSUTF8StringEncoding];
-
-	SETOMasterKey *masterKey = [[SETOMasterKey alloc] init];
-	XCTAssertTrue([masterKey updateFromJSONData:masterKeyFileContents]);
-	XCTAssertNotNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwe" error:nil]);
-	XCTAssertNil([SETOCryptorProvider cryptorFromMasterKey:masterKey withPassword:@"qwer" error:nil]);
-}
 
 - (void)testDecryption {
 	XCTestExpectation *decryptionFinished = [self expectationWithDescription:@"decryption of file finished"];
@@ -213,10 +166,10 @@
 
 - (void)testEncryptionAndDecryptionWithNewMasterKey {
 	// create key:
-	SETOCryptor *cryptor = [SETOCryptorProvider newCryptor];
-	XCTAssertNotNil(cryptor);
-	SETOMasterKey *key = [cryptor masterKeyWithPassword:@"asd"];
+	SETOMasterKey *key = [[SETOMasterKey alloc] init];
 	XCTAssertNotNil(key);
+	SETOCryptor *cryptor = [[SETOCryptorV5 alloc] initWithMasterKey:key];
+	XCTAssertNotNil(cryptor);
 
 	// encrypt:
 	XCTestExpectation *encryptionFinished = [self expectationWithDescription:@"encryption of file finished"];
@@ -275,40 +228,40 @@
 #pragma mark - Chunk Sizes
 
 - (void)testCleartextSize {
-	XCTAssertEqual(0, [SETOCryptorProvider cleartextSizeFromCiphertextSize:0 withCryptor:self.cryptor]);
+	XCTAssertEqual(0, [self.cryptor cleartextSizeFromCiphertextSize:0]);
 
-	XCTAssertEqual(1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:1 + 48 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024 - 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 - 1 + 48 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 48 withCryptor:self.cryptor]);
+	XCTAssertEqual(1, [self.cryptor cleartextSizeFromCiphertextSize:1 + 48]);
+	XCTAssertEqual(32 * 1024 - 1, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 - 1 + 48]);
+	XCTAssertEqual(32 * 1024, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 + 48]);
 
-	XCTAssertEqual(32 * 1024 + 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48 * 2 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024 + 2, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 2 + 48 * 2 withCryptor:self.cryptor]);
-	XCTAssertEqual(64 * 1024 - 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 - 1 + 48 * 2 withCryptor:self.cryptor]);
-	XCTAssertEqual(64 * 1024, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 + 48 * 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 + 1, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48 * 2]);
+	XCTAssertEqual(32 * 1024 + 2, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 + 2 + 48 * 2]);
+	XCTAssertEqual(64 * 1024 - 1, [self.cryptor cleartextSizeFromCiphertextSize:64 * 1024 - 1 + 48 * 2]);
+	XCTAssertEqual(64 * 1024, [self.cryptor cleartextSizeFromCiphertextSize:64 * 1024 + 48 * 2]);
 
-	XCTAssertEqual(64 * 1024 + 1, [SETOCryptorProvider cleartextSizeFromCiphertextSize:64 * 1024 + 1 + 48 * 3 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024 + 1, [self.cryptor cleartextSizeFromCiphertextSize:64 * 1024 + 1 + 48 * 3]);
 }
 
 - (void)testCleartextSizeWithInvalidCiphertextSize {
-	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:1 withCryptor:self.cryptor]);
-	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:48 withCryptor:self.cryptor]);
-	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48 withCryptor:self.cryptor]);
-	XCTAssertEqual(NSUIntegerMax, [SETOCryptorProvider cleartextSizeFromCiphertextSize:32 * 1024 + 48 * 2 withCryptor:self.cryptor]);
+	XCTAssertEqual(NSUIntegerMax, [self.cryptor cleartextSizeFromCiphertextSize:1]);
+	XCTAssertEqual(NSUIntegerMax, [self.cryptor cleartextSizeFromCiphertextSize:48]);
+	XCTAssertEqual(NSUIntegerMax, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 + 1 + 48]);
+	XCTAssertEqual(NSUIntegerMax, [self.cryptor cleartextSizeFromCiphertextSize:32 * 1024 + 48 * 2]);
 }
 
 - (void)testCiphertextSize {
-	XCTAssertEqual(0, [SETOCryptorProvider ciphertextSizeFromCleartextSize:0 withCryptor:self.cryptor]);
+	XCTAssertEqual(0, [self.cryptor ciphertextSizeFromCleartextSize:0]);
 
-	XCTAssertEqual(1 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:1 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024 - 1 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 - 1 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024 + 48, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 withCryptor:self.cryptor]);
+	XCTAssertEqual(1 + 48, [self.cryptor ciphertextSizeFromCleartextSize:1]);
+	XCTAssertEqual(32 * 1024 - 1 + 48, [self.cryptor ciphertextSizeFromCleartextSize:32 * 1024 - 1]);
+	XCTAssertEqual(32 * 1024 + 48, [self.cryptor ciphertextSizeFromCleartextSize:32 * 1024]);
 
-	XCTAssertEqual(32 * 1024 + 1 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 + 1 withCryptor:self.cryptor]);
-	XCTAssertEqual(32 * 1024 + 2 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:32 * 1024 + 2 withCryptor:self.cryptor]);
-	XCTAssertEqual(64 * 1024 - 1 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 - 1 withCryptor:self.cryptor]);
-	XCTAssertEqual(64 * 1024 + 48 * 2, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 withCryptor:self.cryptor]);
+	XCTAssertEqual(32 * 1024 + 1 + 48 * 2, [self.cryptor ciphertextSizeFromCleartextSize:32 * 1024 + 1]);
+	XCTAssertEqual(32 * 1024 + 2 + 48 * 2, [self.cryptor ciphertextSizeFromCleartextSize:32 * 1024 + 2]);
+	XCTAssertEqual(64 * 1024 - 1 + 48 * 2, [self.cryptor ciphertextSizeFromCleartextSize:64 * 1024 - 1]);
+	XCTAssertEqual(64 * 1024 + 48 * 2, [self.cryptor ciphertextSizeFromCleartextSize:64 * 1024]);
 
-	XCTAssertEqual(64 * 1024 + 1 + 48 * 3, [SETOCryptorProvider ciphertextSizeFromCleartextSize:64 * 1024 + 1 withCryptor:self.cryptor]);
+	XCTAssertEqual(64 * 1024 + 1 + 48 * 3, [self.cryptor ciphertextSizeFromCleartextSize:64 * 1024 + 1]);
 }
 
 @end

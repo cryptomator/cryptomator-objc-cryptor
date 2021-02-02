@@ -10,6 +10,8 @@
 
 /**
  *  Beginning with vault format v6, the password is normalized in NFC.
+ *
+ *  No implementation needed because this change is part of @c SETOMasterKeyFile.
  */
 @interface SETOCryptorV6 : SETOCryptorV5
 
