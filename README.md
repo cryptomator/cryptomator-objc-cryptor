@@ -132,7 +132,7 @@ SETOCryptor *cryptor = [[SETOCryptorV7 alloc] initWithMasterKey:masterKey];
 
 #### Directory ID Encryption
 
-Encrypt the directory ID in order to determine the encrypted directory URL.
+Encrypt the directory ID in order to determine the encrypted directory path.
 
 ```objective-c
 SETOCryptor *cryptor = ...;
