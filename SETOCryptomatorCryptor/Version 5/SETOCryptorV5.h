@@ -6,13 +6,11 @@
 //  Copyright © 2015-2017 Skymatic. All rights reserved.
 //
 
-#import "SETOCryptorV4.h"
+#import "SETOCryptorV3.h"
 
 /**
- *  Beginning with vault format v5, file size obfuscation has been disabled.
- *
- *  File sizes can be determined in O(1) instead of having to read and decrypt the file header. This allows showing file sizes in the directory listing without having to download each file first. The file size in the header is now unused and filled with 0xFFFFFFFFFFFFFFFF.
+ *  Use this cryptor for vault formats 5 and 6.
  */
-@interface SETOCryptorV5 : SETOCryptorV4
+@interface SETOCryptorV5 : SETOCryptorV3
 
 @end
