@@ -1,5 +1,14 @@
 # Release Notes
 
+## Version 1.6.0
+
+Refactored MasterKey/Cryptor API, which contains many breaking changes.
+
+- Added `SETOMasterKeyFile`, which is a representation of the master key file.
+- Changed `SETOMasterKey`, so that it only holds the key material, moved "master key file" code to `SETOMasterKeyFile`.
+- Changed `SETOCryptorProvider`, moved "unlock" code to `SETOMasterKeyFile` and "file size calculation" code to `SETOCryptor`.
+- Changed `SETOCryptor`, moved "lock" code to `SETOMasterKeyFile`.
+
 ## Version 1.5.2
 
 - Simplified `-[NSData seto_base64urlEncodedString]` method.

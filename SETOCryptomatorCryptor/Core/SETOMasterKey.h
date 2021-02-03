@@ -14,19 +14,19 @@
 @property (nonatomic, readonly) NSData *macMasterKey;
 
 /**
- *  Creates masterkey from raw bytes.
+ *  Creates master key from raw bytes.
  *
  *  @param aesMasterKey Key used for encryption of file specific keys.
  *  @param macMasterKey Key used for file authentication.
  *
- *  @return New masterkey instance using the keys from the supplied raw bytes.
+ *  @return New master key instance using the keys from the supplied raw bytes.
  */
 - (instancetype)initWithAESMasterKey:(NSData *)aesMasterKey macMasterkey:(NSData *)macMasterKey;
 
 /**
- *  Creates new masterkey.
+ *  Creates new master key.
  *
- *  @return New masterkey instance with secure random bytes.
+ *  @return New master key instance with secure random bytes.
  */
 - (instancetype)init;
 
