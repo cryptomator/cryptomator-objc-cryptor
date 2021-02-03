@@ -117,18 +117,21 @@ dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
 });
 ```
 
-### SETOCryptor
+### SETOCryptorProvider
 
-`SETOCryptor` is the core class for cryptographic operations on Cryptomator vaults. This is an abstract class, so you should use the version-specific subclasses like `SETOCryptorV7` to create a `SETOCryptor` instance.
+`SETOCryptorProvider` is a factory for `SETOCryptor` objects. Always use the factory for creating `SETOCryptor` instances.
 
-#### Constructor
-
-Create a cryptor by providing a masterkey.
+#### Factory
 
 ```objective-c
 SETOMasterKey *masterKey = ...;
-SETOCryptor *cryptor = [[SETOCryptorV7 alloc] initWithMasterKey:masterKey];
+NSError *error;
+SETOCryptor *cryptor = [SETOCryptorProvider cryptorWithMasterKey:masterKey forVaultVersion:7 error:&error];
 ```
+
+### SETOCryptor
+
+`SETOCryptor` is the core class for cryptographic operations on Cryptomator vaults. This is an abstract class, so you should use `SETOCryptorProvider` to create a `SETOCryptor` instance.
 
 #### Directory ID Encryption
 

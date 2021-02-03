@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+@class SETOMasterKey;
+
 extern NSString *const kSETOCryptorErrorDomain;
 
 typedef NS_ENUM(NSInteger, SETOCryptorError) {
@@ -20,8 +22,6 @@ typedef NS_ENUM(NSInteger, SETOCryptorError) {
 
 typedef void (^SETOCryptorCompletionCallback)(NSError *error);
 typedef void (^SETOCryptorProgressCallback)(CGFloat progress);
-
-@class SETOMasterKey;
 
 /**
  *  @c SETOCryptor is the core class for cryptographic operations on Cryptomator vaults.

@@ -60,8 +60,8 @@
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"qwe" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
-	XCTAssertEqualObjects(unlockError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError.code, SETOMasterKeyFileInvalidPassphraseError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
+	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError.code);
 }
 
 - (void)testUnlockWithInvalidVersionMac {
@@ -70,8 +70,8 @@
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
-	XCTAssertEqualObjects(unlockError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError.code, SETOMasterKeyFileMalformedError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
+	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
 }
 
 - (void)testUnlockWithMalformedJson1 {
@@ -80,8 +80,8 @@
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
-	XCTAssertEqualObjects(unlockError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError.code, SETOMasterKeyFileMalformedError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
+	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
 }
 
 - (void)testUnlockWithMalformedJson2 {
@@ -90,8 +90,8 @@
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
-	XCTAssertEqualObjects(unlockError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError.code, SETOMasterKeyFileMalformedError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
+	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
 }
 
 - (void)testUnlockWithMalformedJson3 {
@@ -100,8 +100,8 @@
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
-	XCTAssertEqualObjects(unlockError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError.code, SETOMasterKeyFileMalformedError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
+	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
 }
 
 - (void)testUnlockWithDifferentNormalizationFormsOfPassphrase {
@@ -114,18 +114,18 @@
 
 	NSError *unlockError2;
 	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError2]); // NFC + NFC
-	XCTAssertEqual(unlockError2.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError2.code, SETOMasterKeyFileInvalidPassphraseError);
+	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError2.domain);
+	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError2.code);
 
 	NSError *unlockError3;
 	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError3]); // NFD + NFD
-	XCTAssertEqual(unlockError3.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError3.code, SETOMasterKeyFileInvalidPassphraseError);
+	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError3.domain);
+	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError3.code);
 
 	NSError *unlockError4;
 	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError4]); // NFD + NFC
-	XCTAssertEqual(unlockError4.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(unlockError4.code, SETOMasterKeyFileInvalidPassphraseError);
+	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError4.domain);
+	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError4.code);
 }
 
 - (void)testLock {
@@ -190,8 +190,8 @@
 	NSError *keyWrapError;
 	NSData *wrapped = [SETOMasterKeyFile wrapKey:key kek:kekBytes error:&keyWrapError];
 	XCTAssertNil(wrapped);
-	XCTAssertEqualObjects(keyWrapError.domain, kSETOMasterKeyFileErrorDomain);
-	XCTAssertEqual(keyWrapError.code, SETOMasterKeyFileKeyWrapFailedError);
+	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, keyWrapError.domain);
+	XCTAssertEqual(SETOMasterKeyFileKeyWrapFailedError, keyWrapError.code);
 }
 
 @end
