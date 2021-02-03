@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.source   = { :git => 'https://github.com/cryptomator/cryptomator-objc-cryptor.git', :tag => s.version.to_s }
   s.requires_arc = true
 
-  s.public_header_files = 'SETOCryptomatorCryptor/Core/{SETOMasterKey,SETOMasterKeyFile,SETOCryptorProvider,SETOCryptor,SETOAsyncCryptor}.h', 'SETOCryptomatorCryptor/Util/NSData+SETOBase64urlEncoding.h'
+  s.public_header_files = 'SETOCryptomatorCryptor/Core/*.h', 'SETOCryptomatorCryptor/Util/NSData+SETOBase64urlEncoding.h'
   s.source_files = 'SETOCryptomatorCryptor/**/*.{h,m,c}'
 
   s.platform = :ios, '8.0'
@@ -27,4 +27,8 @@ Pod::Spec.new do |s|
   s.subspec 'scrypt' do |ss|
     ss.source_files = 'scrypt/*.{h,c}'
   end
+
+  # https://github.com/CocoaPods/CocoaPods/issues/10065#issuecomment-694266259
+  s.pod_target_xcconfig = {'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'}
+  s.user_target_xcconfig = {'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'}
 end
