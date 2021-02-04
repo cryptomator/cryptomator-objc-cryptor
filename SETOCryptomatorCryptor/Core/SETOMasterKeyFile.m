@@ -29,7 +29,7 @@ NSString *const kSETOMasterKeyFileScryptBlockSizeKey = @"scryptBlockSize";
 NSString *const kSETOMasterKeyFilePrimaryMasterKeyKey = @"primaryMasterKey";
 NSString *const kSETOMasterKeyFileMacMasterKeyKey = @"hmacMasterKey";
 
-uint64_t const kSETOMasterKeyFileDefaulScryptCostParam = 32768; // 2^15
+uint64_t const kSETOMasterKeyFileDefaultScryptCostParam = 32768; // 2^15
 int const kSETOMasterKeyFileDefaultScryptSaltSize = 8;
 uint32_t const kSETOMasterKeyFileDefaultScryptBlockSize = 8;
 

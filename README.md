@@ -95,7 +95,7 @@ SETOMasterKey *masterKey = ...;
 NSInteger vaultVersion = ...;
 NSString *passphrase = ...;
 NSData *pepper = ...; // optional
-uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaulScryptCostParam if you are not sure
+uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaultScryptCostParam if you are not sure
 NSError *error;
 NSData *jsonData = [SETOMasterKeyFile lockMasterKey:masterKey withVaultVersion:vaultVersion passphrase:passphrase pepper:pepper scryptCostParam:scryptCostParam error:&error];
 ```
@@ -108,7 +108,7 @@ dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
   NSInteger vaultVersion = ...;
   NSString *passphrase = ...;
   NSData *pepper = ...; // optional
-  uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaulScryptCostParam if you are not sure
+  uint64_t scryptCostParam = ...; // use kSETOMasterKeyFileDefaultScryptCostParam if you are not sure
   NSError *error;
   NSData *jsonData = [SETOMasterKeyFile lockMasterKey:masterKey withVaultVersion:vaultVersion passphrase:passphrase pepper:pepper scryptCostParam:scryptCostParam error:&error];
   dispatch_async(dispatch_get_main_queue(), ^{

@@ -19,7 +19,7 @@ typedef NS_ENUM(NSInteger, SETOMasterKeyFileError) {
 	SETOMasterKeyFileKeyWrapFailedError
 };
 
-extern uint64_t const kSETOMasterKeyFileDefaulScryptCostParam;
+extern uint64_t const kSETOMasterKeyFileDefaultScryptCostParam;
 
 @interface SETOMasterKeyFile : NSObject
 
@@ -61,7 +61,7 @@ extern uint64_t const kSETOMasterKeyFileDefaulScryptCostParam;
  *  @param vaultVersion    The vault version that should be stored in this master key file (for downwards compatibility).
  *  @param passphrase      The passphrase used during key derivation.
  *  @param pepper          An application-specific pepper added to the scrypt's salt (if applicable).
- *  @param scryptCostParam The work factor for the key derivation function (scrypt). Use @p kSETOMasterKeyFileDefaulScryptCostParam if you are not sure.
+ *  @param scryptCostParam The work factor for the key derivation function (scrypt). Use @p kSETOMasterKeyFileDefaultScryptCostParam if you are not sure.
  *  @param error           On input, a pointer to an error object. If an error occurs, this pointer is set to an actual error object containing the error information. You may specify @p NULL for this parameter if you do not want the error information.
  *
  *  @return A JSON representation of the encrypted master key with its key derivation parameters.
