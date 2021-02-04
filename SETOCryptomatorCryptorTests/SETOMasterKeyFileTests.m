@@ -64,14 +64,14 @@
 	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError.code);
 }
 
-- (void)testUnlockWithInvalidVersionMac {
+- (void)testUnlockWithUnauthenticVersion {
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+G=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
-	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
+	XCTAssertEqual(SETOMasterKeyFileUnauthenticVersionError, unlockError.code);
 }
 
 - (void)testUnlockWithMalformedJson1 {
@@ -95,7 +95,7 @@
 }
 
 - (void)testUnlockWithMalformedJson3 {
-	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g!\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
 	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];

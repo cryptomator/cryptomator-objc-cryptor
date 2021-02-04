@@ -71,7 +71,7 @@ uint32_t const kSETOMasterKeyFileDefaultScryptBlockSize = 8;
 
 - (SETOMasterKey *)unlockWithPassphrase:(NSString *)passphrase pepper:(NSData *)pepper expectedVaultVersion:(NSInteger)expectedVaultVersion error:(NSError **)error {
 	NSParameterAssert(passphrase);
-	if (!self.primaryMasterKey || !self.macMasterKey) {
+	if (!self.primaryMasterKey || !self.macMasterKey || (self.version >= 5 && !self.versionMac)) {
 		if (error) {
 			*error = [NSError errorWithDomain:kSETOMasterKeyFileErrorDomain code:SETOMasterKeyFileMalformedError userInfo:nil];
 		}
@@ -141,7 +141,7 @@ uint32_t const kSETOMasterKeyFileDefaultScryptBlockSize = 8;
 		return [[SETOMasterKey alloc] initWithAESMasterKey:primaryMasterKey macMasterkey:macMasterKey];
 	} else {
 		if (error) {
-			*error = [NSError errorWithDomain:kSETOMasterKeyFileErrorDomain code:SETOMasterKeyFileMalformedError userInfo:nil];
+			*error = [NSError errorWithDomain:kSETOMasterKeyFileErrorDomain code:SETOMasterKeyFileUnauthenticVersionError userInfo:nil];
 		}
 		return nil;
 	}

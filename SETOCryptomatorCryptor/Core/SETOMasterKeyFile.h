@@ -15,6 +15,7 @@ extern NSString *const kSETOMasterKeyFileErrorDomain;
 typedef NS_ENUM(NSInteger, SETOMasterKeyFileError) {
 	SETOMasterKeyFileMalformedError,
 	SETOMasterKeyFileInvalidPassphraseError,
+	SETOMasterKeyFileUnauthenticVersionError,
 	SETOMasterKeyFileKeyDerivationFailedError,
 	SETOMasterKeyFileKeyWrapFailedError
 };
