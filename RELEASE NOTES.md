@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.6.1
+
+- Fixed typo of `kSETOMasterKeyFileDefaultScryptCostParam`.
+
 ## Version 1.6.0
 
 Refactored MasterKey/Cryptor API, which contains many breaking changes.
