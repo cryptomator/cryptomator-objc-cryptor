@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.6.2
+
+- Re-added error code `SETOMasterKeyFileUnauthenticVersionError`.
+
 ## Version 1.6.1
 
 - Fixed typo of `kSETOMasterKeyFileDefaultScryptCostParam`.
