@@ -1,5 +1,9 @@
 # Release Notes
 
+## Version 1.6.3
+
+- Removed `expectedVaultVersion` param in `-[SETOMasterKeyFile unlockWithPassphrase:pepper:error:]` method.
+
 ## Version 1.6.2
 
 - Re-added error code `SETOMasterKeyFileUnauthenticVersionError`.
