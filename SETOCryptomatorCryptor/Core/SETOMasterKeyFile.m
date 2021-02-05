@@ -69,7 +69,7 @@ uint32_t const kSETOMasterKeyFileDefaultScryptBlockSize = 8;
 	return self;
 }
 
-- (SETOMasterKey *)unlockWithPassphrase:(NSString *)passphrase pepper:(NSData *)pepper expectedVaultVersion:(NSInteger)expectedVaultVersion error:(NSError **)error {
+- (SETOMasterKey *)unlockWithPassphrase:(NSString *)passphrase pepper:(NSData *)pepper error:(NSError **)error {
 	NSParameterAssert(passphrase);
 	if (!self.primaryMasterKey || !self.macMasterKey || (self.version >= 5 && !self.versionMac)) {
 		if (error) {
@@ -121,10 +121,10 @@ uint32_t const kSETOMasterKeyFileDefaultScryptBlockSize = 8;
 
 	// check MAC:
 	BOOL versionMacsEqual = YES;
-	if (self.version >= 5 && expectedVaultVersion != NSNotFound) {
+	if (self.version >= 5) {
 		// calculate mac over version:
 		unsigned char version[sizeof(uint32_t)] = {0};
-		int_to_big_endian_bytes((uint32_t)expectedVaultVersion, version);
+		int_to_big_endian_bytes((uint32_t)self.version, version);
 		unsigned char calculatedVersionMac[CC_SHA256_DIGEST_LENGTH];
 		CCHmacContext versionHmacContext;
 		CCHmacInit(&versionHmacContext, kCCHmacAlgSHA256, macMasterKey.bytes, macMasterKey.length);

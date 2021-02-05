@@ -26,7 +26,7 @@
 	XCTAssertNotNil(masterKeyFile);
 
 	NSError *error;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:3 error:&error];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&error];
 	XCTAssertNotNil(masterKey);
 	XCTAssertNil(error);
 

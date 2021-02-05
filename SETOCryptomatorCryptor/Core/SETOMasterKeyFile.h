@@ -45,14 +45,13 @@ extern uint64_t const kSETOMasterKeyFileDefaultScryptCostParam;
 /**
  *  Derives a KEK from the given passphrase and the params from this master key file using scrypt and unwraps the stored encryption and MAC keys.
  *
- *  @param passphrase           The passphrase used during key derivation.
- *  @param pepper               An application-specific pepper added to the scrypt's salt (if applicable).
- *  @param expectedVaultVersion An expected vault version. Use @p NSNotFound if a version check should be skipped.
- *  @param error                On input, a pointer to an error object. If an error occurs, this pointer is set to an actual error object containing the error information. You may specify @p NULL for this parameter if you do not want the error information.
+ *  @param passphrase The passphrase used during key derivation.
+ *  @param pepper     An application-specific pepper added to the scrypt's salt (if applicable).
+ *  @param error      On input, a pointer to an error object. If an error occurs, this pointer is set to an actual error object containing the error information. You may specify @p NULL for this parameter if you do not want the error information.
  *
  *  @return A master key with the unwrapped keys.
  */
-- (SETOMasterKey *)unlockWithPassphrase:(NSString *)passphrase pepper:(NSData *)pepper expectedVaultVersion:(NSInteger)expectedVaultVersion error:(NSError **)error;
+- (SETOMasterKey *)unlockWithPassphrase:(NSString *)passphrase pepper:(NSData *)pepper error:(NSError **)error;
 
 /**
  *  Derives a KEK from the given passphrase and wraps the key material from master key.

@@ -46,7 +46,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&unlockError];
 	XCTAssertNotNil(masterKey);
 	XCTAssertNil(unlockError);
 	unsigned char expectedKeyBuffer[32] = {0};
@@ -58,7 +58,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"qwe" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"qwe" pepper:nil error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
 	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError.code);
@@ -68,7 +68,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+G=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
 	XCTAssertEqual(SETOMasterKeyFileUnauthenticVersionError, unlockError.code);
@@ -78,7 +78,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q!!\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
 	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
@@ -88,7 +88,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q!!\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g=\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
 	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
@@ -98,7 +98,7 @@
 	NSData *jsonData = [@"{\"scryptSalt\":\"AAAAAAAAAAA=\",\"scryptCostParam\":2,\"scryptBlockSize\":8,\"primaryMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"hmacMasterKey\":\"mM+qoQ+o0qvPTiDAZYt+flaC3WbpNAx1sTXaUzxwpy0M9Ctj6Tih/Q==\",\"versionMac\":\"cn2sAK6l9p1/w9deJVUuW3h7br056mpv5srvALiYw+g!\",\"version\":7}" dataUsingEncoding:NSUTF8StringEncoding];
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 	NSError *unlockError;
-	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil expectedVaultVersion:7 error:&unlockError];
+	SETOMasterKey *masterKey = [masterKeyFile unlockWithPassphrase:@"asd" pepper:nil error:&unlockError];
 	XCTAssertNil(masterKey);
 	XCTAssertEqualObjects(kSETOMasterKeyFileErrorDomain, unlockError.domain);
 	XCTAssertEqual(SETOMasterKeyFileMalformedError, unlockError.code);
@@ -109,21 +109,21 @@
 	SETOMasterKeyFile *masterKeyFile = [[SETOMasterKeyFile alloc] initWithContentFromJSONData:jsonData];
 
 	NSError *unlockError1;
-	XCTAssertNotNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError1]); // NFC + NFD
+	XCTAssertNotNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil error:&unlockError1]); // NFC + NFD
 	XCTAssertNil(unlockError1);
 
 	NSError *unlockError2;
-	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError2]); // NFC + NFC
+	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil error:&unlockError2]); // NFC + NFC
 	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError2.domain);
 	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError2.code);
 
 	NSError *unlockError3;
-	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError3]); // NFD + NFD
+	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil error:&unlockError3]); // NFD + NFD
 	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError3.domain);
 	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError3.code);
 
 	NSError *unlockError4;
-	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil expectedVaultVersion:5 error:&unlockError4]); // NFD + NFC
+	XCTAssertNil([masterKeyFile unlockWithPassphrase:@"țț" pepper:nil error:&unlockError4]); // NFD + NFC
 	XCTAssertEqual(kSETOMasterKeyFileErrorDomain, unlockError4.domain);
 	XCTAssertEqual(SETOMasterKeyFileInvalidPassphraseError, unlockError4.code);
 }
